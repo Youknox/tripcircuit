@@ -725,6 +725,12 @@ def index():
     uid = session["user_id"]
     toutes_activites = charger(uid)
     tous_les_trips   = charger_trips(uid)
+    
+    return render_template(
+        "index.html",
+        activites=toutes_activites,
+        trips=tous_les_trips
+    )
 
     # Filtre optionnel par voyage — avec contrôle d'accès strict
     trip_id_filtre = request.args.get("trip", type=int)
