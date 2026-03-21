@@ -722,14 +722,10 @@ def supprimer_image(nom_fichier: str) -> None:
 @app.route("/")
 @login_required
 def index():
-    uid = session["user_id"]
-    toutes_activites = charger(uid)
-    tous_les_trips   = charger_trips(uid)
-    
     return render_template(
         "index.html",
-        activites=toutes_activites,
-        trips=tous_les_trips
+        activites=[],
+        trips=[]
     )
 
     # Filtre optionnel par voyage — avec contrôle d'accès strict
