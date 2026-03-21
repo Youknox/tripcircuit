@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organiser mon voyage — TripCircuit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --red: #FF385C; --dark: #1a1a1a; --mid: #717171;
+            --light: #ebebeb; --bg: #f4f4f6; --white: #fff;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: var(--bg);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            background: rgba(255,255,255,.88);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(0,0,0,.06);
+            height: 64px;
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo { font-size: 21px; font-weight: 800; color: var(--red); text-decoration: none; }
+        .logo span { color: var(--dark); }
+
+        .back {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--mid);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color .15s;
+        }
+        .back:hover { color: var(--dark); }
+
+        /* ── Contenu centré ── */
+        .center {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+        }
+
+        .card {
+            background: var(--white);
+            border: 1px solid var(--light);
+            border-radius: 20px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 4px 24px rgba(0,0,0,.07);
+            text-align: center;
+        }
+
+        .card-icon { font-size: 52px; margin-bottom: 20px; display: block; }
+
+        .card h1 {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -.5px;
+            margin-bottom: 8px;
+        }
+
+        .card p {
+            font-size: 15px;
+            color: var(--mid);
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1.5px solid var(--light);
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            color: var(--dark);
+            background: #fafafa;
+            outline: none;
+            margin-bottom: 14px;
+            transition: border-color .15s;
+        }
+
+        input[type="text"]:focus { border-color: var(--red); background: var(--white); }
+        input::placeholder { color: #c0c0c0; }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: var(--red);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: opacity .15s;
+        }
+
+        button:hover { opacity: .88; }
+
+        .examples {
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--mid);
+        }
+
+        .examples span {
+            display: inline-block;
+            background: var(--bg);
+            border: 1px solid var(--light);
+            border-radius: 20px;
+            padding: 4px 12px;
+            margin: 4px;
+            cursor: pointer;
+            transition: border-color .15s;
+        }
+
+        .examples span:hover { border-color: var(--red); color: var(--dark); }
+
+        @media (max-width: 480px) {
+            header { padding: 0 16px; }
+            .card  { padding: 32px 20px; border-radius: 16px; }
+            .card h1 { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <a class="logo" href="/">Trip<span>Circuit</span></a>
+    <a class="back" href="/">← Retour</a>
+</header>
+
+<div class="center">
+    <div class="card">
+        <span class="card-icon">🗺️</span>
+        <h1>Organiser mon voyage</h1>
+        <p>Entrez une ville et je génère un planning de 3 jours avec vos activités enregistrées.</p>
+
+        <form action="/organiser" method="post">
+            <div style="display:flex; gap:10px; margin-bottom:14px;">
+                <label style="flex:1; display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600; color:#717171;">
+                    Durée
+                    <select name="nb_jours" style="padding:14px 18px; border:1.5px solid #ebebeb; border-radius:12px; font-size:16px; font-family:inherit; background:#fafafa; color:#1a1a1a; outline:none;">
+                        <option value="2">2 jours</option>
+                        <option value="3" selected>3 jours</option>
+                    </select>
+                </label>
+            </div>
+            <button type="submit">Générer le planning →</button>
+        </form>
+
+        <p style="margin-top:18px; font-size:13px; color:#717171; line-height:1.5;">
+            Les activités sont automatiquement réparties<br>par ville et par créneau.
+        </p>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion — TripCircuit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --orange: #f97316;
+            --pink:   #ec4899;
+            --violet: #7c3aed;
+            --brand:  linear-gradient(135deg, #f97316 0%, #ec4899 55%, #7c3aed 100%);
+            --dark:   #111827;
+            --mid:    #6b7280;
+            --light:  #e5e7eb;
+            --bg:     #f8f9fc;
+            --white:  #ffffff;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* Split layout */
+        .split {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 100vh;
+        }
+
+        /* ── Panneau gauche : hero ── */
+        .panel-left {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 48px;
+            text-align: center;
+        }
+
+        .panel-left-bg {
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse 70% 55% at 20% 40%, rgba(249,115,22,.35) 0%, transparent 55%),
+                radial-gradient(ellipse 60% 65% at 80% 60%, rgba(124,58,237,.40) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 40% at 55% 5%, rgba(236,72,153,.20) 0%, transparent 50%),
+                linear-gradient(170deg, #0d0b1f 0%, #1a1040 45%, #0c1445 100%);
+        }
+        .panel-left-bg::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.11) 1px, transparent 0);
+            background-size: 36px 36px;
+            mask-image: radial-gradient(ellipse 75% 80% at 50% 50%, black 0%, transparent 100%);
+            -webkit-mask-image: radial-gradient(ellipse 75% 80% at 50% 50%, black 0%, transparent 100%);
+        }
+
+        .panel-left-content { position: relative; z-index: 1; }
+
+        .panel-logo {
+            font-size: 28px; font-weight: 900; letter-spacing: -1px;
+            background: var(--brand);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block; margin-bottom: 40px;
+            text-decoration: none;
+        }
+
+        .panel-headline {
+            font-size: 38px; font-weight: 900;
+            letter-spacing: -1.5px; line-height: 1.12;
+            color: white; margin-bottom: 14px;
+        }
+        .panel-headline .grd {
+            background: linear-gradient(135deg, #fb923c, #ec4899 50%, #a78bfa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .panel-sub { font-size: 15px; color: rgba(255,255,255,.50); line-height: 1.6; max-width: 280px; }
+
+        .panel-features {
+            margin-top: 36px;
+            display: flex; flex-direction: column; gap: 14px;
+        }
+        .feature {
+            display: flex; align-items: center; gap: 12px;
+            background: rgba(255,255,255,.07);
+            border: 1px solid rgba(255,255,255,.10);
+            border-radius: 12px; padding: 12px 16px;
+            backdrop-filter: blur(6px);
+        }
+        .feature-icon { font-size: 20px; flex-shrink: 0; }
+        .feature-text { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.80); text-align: left; }
+
+        /* ── Panneau droit : formulaire ── */
+        .panel-right {
+            background: var(--white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 48px;
+        }
+
+        .form-box { width: 100%; max-width: 360px; }
+
+        .form-box h1 {
+            font-size: 28px; font-weight: 900;
+            letter-spacing: -.6px; margin-bottom: 6px;
+        }
+
+        .form-subtitle { font-size: 14px; color: var(--mid); margin-bottom: 32px; }
+
+        .field { margin-bottom: 16px; }
+
+        .field label {
+            display: block; font-size: 12px; font-weight: 700;
+            color: var(--mid); text-transform: uppercase; letter-spacing: .5px;
+            margin-bottom: 7px;
+        }
+
+        .field input {
+            width: 100%; padding: 13px 16px;
+            border: 1.5px solid var(--light); border-radius: 12px;
+            font-size: 15px; font-family: inherit;
+            color: var(--dark); background: var(--bg);
+            outline: none; transition: border-color .15s, background .15s, box-shadow .15s;
+        }
+        .field input:focus {
+            border-color: var(--orange); background: var(--white);
+            box-shadow: 0 0 0 3px rgba(249,115,22,.1);
+        }
+        .field input::placeholder { color: #c4c4c4; }
+
+        .erreur {
+            background: rgba(239,68,68,.06);
+            border: 1px solid rgba(239,68,68,.18);
+            border-radius: 10px; padding: 10px 14px;
+            font-size: 13px; color: #991b1b; font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .btn-submit {
+            width: 100%; padding: 14px;
+            background: var(--brand); color: #fff;
+            border: none; border-radius: 12px;
+            font-size: 15px; font-weight: 700; font-family: inherit;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
+            box-shadow: 0 4px 14px rgba(249,115,22,.28);
+            margin-top: 8px;
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(236,72,153,.38); }
+
+        .lien-bas { text-align: center; margin-top: 22px; font-size: 13px; color: var(--mid); }
+        .lien-bas a {
+            font-weight: 700; text-decoration: none;
+            background: var(--brand);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .lien-bas a:hover { opacity: .8; }
+
+        /* Mobile : stack vertically */
+        @media (max-width: 768px) {
+            .split { grid-template-columns: 1fr; }
+            .panel-left { display: none; }
+            .panel-right { padding: 48px 24px; min-height: 100vh; background: var(--bg); }
+            .form-box { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="split">
+
+    <!-- Panneau gauche -->
+    <div class="panel-left">
+        <div class="panel-left-bg"></div>
+        <div class="panel-left-content">
+            <a class="panel-logo" href="/">TripCircuit</a>
+            <div class="panel-headline">
+                Votre carnet<br>de voyage <span class="grd">digital</span>
+            </div>
+            <p class="panel-sub">Sauvegardez, organisez et partagez toutes vos aventures.</p>
+            <div class="panel-features">
+                <div class="feature">
+                    <span class="feature-icon">✈️</span>
+                    <span class="feature-text">Organisez par voyages</span>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🗺️</span>
+                    <span class="feature-text">Visualisez sur une carte</span>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🔗</span>
+                    <span class="feature-text">Partagez en un clic</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panneau droit -->
+    <div class="panel-right">
+        <div class="form-box">
+            <a href="/" style="font-size:20px;font-weight:900;text-decoration:none;background:linear-gradient(135deg,#f97316,#ec4899 55%,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block;margin-bottom:32px;">TripCircuit</a>
+
+            <h1>Connexion</h1>
+            <p class="form-subtitle">Content de te revoir ! 👋</p>
+
+            {% if erreur %}
+            <div class="erreur">{{ erreur }}</div>
+            {% endif %}
+
+            <form action="/login" method="post">
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="toi@email.com" required autofocus>
+                </div>
+                <div class="field">
+                    <label for="mdp">Mot de passe</label>
+                    <input type="password" id="mdp" name="mdp" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-submit">Se connecter →</button>
+            </form>
+
+            <p class="lien-bas">
+                Pas encore de compte ? <a href="/register">S'inscrire gratuitement</a>
+            </p>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

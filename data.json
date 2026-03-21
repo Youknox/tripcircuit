@@ -1,0 +1,58 @@
+[
+    {
+        "id": 1,
+        "nom": "Billets pour Disneyland Paris | 1 jour, 2 parcs et offres",
+        "ville": "",
+        "lien": "https://www.paristickets.com/fr/disneyland-paris/",
+        "image": "",
+        "lat": 48.8566,
+        "lng": 2.3522,
+        "type": "Nature",
+        "categorie": "nature",
+        "icone": "🌿",
+        "description": "Espace naturel à explorer",
+        "suggestions_ia": []
+    },
+    {
+        "id": 2,
+        "nom": "Billets pour le Château de Versailles | Entrée exclusive, visites non inclusives",
+        "ville": "",
+        "lien": "https://www.paristickets.com/fr/versailles-palace/",
+        "image": "",
+        "lat": 48.8566,
+        "lng": 2.3522,
+        "type": "Monument",
+        "categorie": "culture",
+        "icone": "🏰",
+        "description": "Site historique et patrimonial",
+        "suggestions_ia": []
+    },
+    {
+        "id": 3,
+        "nom": "Billets pour l'Arc de Triomphe | Accès aux toits et vue sur Paris",
+        "ville": "paris",
+        "lien": "https://www.paristickets.com/fr/arc-de-triomphe/",
+        "image": "",
+        "lat": 48.8566,
+        "lng": 2.3522,
+        "type": "Visite",
+        "categorie": "visite",
+        "icone": "🗺️",
+        "description": "À découvrir lors de votre visite",
+        "suggestions_ia": []
+    },
+    {
+        "id": 4,
+        "nom": "Dîner Croisière Seine Paris dès 59€ - Réservez | Paris en Scène",
+        "ville": "paris",
+        "lien": "https://www.paris-en-scene.com/?msclkid=df945a8852e71fe0745c3336a8220b1a&utm_source=bing&utm_medium=cpc&utm_campaign=%5BFR%5D%20%5BHM%5D%20Bistrot&utm_term=bateau%20bistrot%20%C3%A0%20paris&utm_content=P%20-%20Bistro%20Bateau%20G%C3%A9n%C3%A9rique",
+        "image": "",
+        "lat": 48.8566,
+        "lng": 2.3522,
+        "type": "Restaurant",
+        "categorie": "food",
+        "icone": "🍽️",
+        "description": "Adresse gastronomique à ne pas manquer",
+        "suggestions_ia": []
+    }
+]

@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripCircuit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+
+        /* ═══════════════════════════════════════
+           VARIABLES & RESET
+        ═══════════════════════════════════════ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --orange:  #f97316;
+            --pink:    #ec4899;
+            --violet:  #7c3aed;
+            --indigo:  #4f46e5;
+            --brand:   linear-gradient(135deg, #f97316 0%, #ec4899 55%, #7c3aed 100%);
+
+            --dark:    #111827;
+            --mid:     #6b7280;
+            --light:   #e5e7eb;
+            --bg:      #f8f9fc;
+            --white:   #ffffff;
+            --radius:  18px;
+
+            --shadow-sm: 0 1px 3px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.06);
+            --shadow-md: 0 4px 20px rgba(0,0,0,.09), 0 16px 48px rgba(0,0,0,.10);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,.11), 0 32px 64px rgba(0,0,0,.13);
+            --shadow-xl: 0 24px 64px rgba(0,0,0,.22);
+        }
+
+        body {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--dark);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ═══════════════════════════════════════
+           HEADER
+        ═══════════════════════════════════════ */
+        header {
+            background: rgba(255,255,255,.94);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0,0,0,.06);
+            height: 64px;
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 900;
+            text-decoration: none;
+            letter-spacing: -0.8px;
+            background: var(--brand);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-nav { display: flex; align-items: center; gap: 6px; }
+
+        .nav-btn {
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all .15s;
+            color: var(--mid);
+            background: transparent;
+        }
+        .nav-btn:hover { background: var(--light); color: var(--dark); }
+        .nav-btn.active {
+            background: var(--brand);
+            color: white;
+            box-shadow: 0 4px 14px rgba(249,115,22,.3);
+        }
+
+        .header-pill {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--mid);
+            background: var(--bg);
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--light);
+        }
+
+        /* ═══════════════════════════════════════
+           HERO — DARK + GLOW ORBS
+        ═══════════════════════════════════════ */
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 88px 24px 80px;
+            text-align: center;
+        }
+
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 60% at 15% 45%, rgba(249,115,22,.32) 0%, transparent 55%),
+                radial-gradient(ellipse 65% 70% at 85% 55%, rgba(124,58,237,.38) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 45% at 55% 10%, rgba(236,72,153,.20) 0%, transparent 50%),
+                linear-gradient(170deg, #0d0b1f 0%, #1a1040 45%, #0c1445 100%);
+        }
+
+        /* Dot-grid texture */
+        .hero-bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.12) 1px, transparent 0);
+            background-size: 36px 36px;
+            mask-image: radial-gradient(ellipse 75% 80% at 50% 50%, black 0%, transparent 100%);
+            -webkit-mask-image: radial-gradient(ellipse 75% 80% at 50% 50%, black 0%, transparent 100%);
+        }
+
+        .hero-content { position: relative; z-index: 1; }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            background: rgba(255,255,255,.10);
+            border: 1px solid rgba(255,255,255,.18);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,.80);
+            margin-bottom: 22px;
+            backdrop-filter: blur(8px);
+            letter-spacing: .2px;
+        }
+
+        .hero h1 {
+            font-size: 46px;
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 1.12;
+            color: white;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 .grd {
+            background: linear-gradient(135deg, #fb923c, #ec4899 50%, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 16px;
+            color: rgba(255,255,255,.55);
+            max-width: 380px;
+            margin: 0 auto;
+            line-height: 1.65;
+        }
+
+        /* ═══════════════════════════════════════
+           PAGE
+        ═══════════════════════════════════════ */
+        .page {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 52px 24px 100px;
+        }
+
+        /* ═══════════════════════════════════════
+           TRIP FILTER BANNER
+        ═══════════════════════════════════════ */
+        .filter-banner {
+            background: linear-gradient(135deg, rgba(249,115,22,.07), rgba(124,58,237,.07));
+            border: 1.5px solid rgba(249,115,22,.18);
+            border-radius: 14px;
+            padding: 14px 20px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .filter-text {
+            font-size: 14px;
+            font-weight: 700;
+            background: var(--brand);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .filter-clear {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--mid);
+            text-decoration: none;
+            padding: 6px 14px;
+            background: var(--white);
+            border: 1px solid var(--light);
+            border-radius: 8px;
+            transition: all .15s;
+            white-space: nowrap;
+        }
+        .filter-clear:hover { border-color: var(--orange); color: var(--orange); }
+
+        /* ═══════════════════════════════════════
+           FORMULAIRES
+        ═══════════════════════════════════════ */
+        .forms-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 56px;
+        }
+
+        .form-card {
+            background: var(--white);
+            border: 1px solid rgba(0,0,0,.05);
+            border-radius: var(--radius);
+            padding: 28px;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+        }
+        .form-card.import::before { background: linear-gradient(90deg, #4f46e5, #818cf8); }
+        .form-card.manual::before { background: linear-gradient(90deg, #f97316, #ec4899); }
+
+        .form-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-icon {
+            width: 32px; height: 32px;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+        }
+        .fi-v { background: linear-gradient(135deg, #ede9fe, #ddd6fe); }
+        .fi-o { background: linear-gradient(135deg, #ffedd5, #fed7aa); }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--mid);
+            margin-bottom: 16px;
+            margin-left: 42px;
+        }
+
+        .form-col { display: flex; flex-direction: column; gap: 10px; }
+
+        .form-col input,
+        .form-col select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid var(--light);
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--dark);
+            background: #fafafa;
+            outline: none;
+            transition: border-color .15s, background .15s, box-shadow .15s;
+        }
+        .form-col input:focus,
+        .form-col select:focus {
+            border-color: var(--orange);
+            background: var(--white);
+            box-shadow: 0 0 0 3px rgba(249,115,22,.1);
+        }
+        .form-col input::placeholder { color: #c4c4c4; }
+
+        .btn {
+            padding: 13px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .btn:active { transform: scale(.97); }
+
+        .btn-indigo {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            box-shadow: 0 4px 14px rgba(79,70,229,.28);
+        }
+        .btn-indigo:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(79,70,229,.38); }
+
+        .btn-fire {
+            background: linear-gradient(135deg, #f97316, #ec4899);
+            color: white;
+            box-shadow: 0 4px 14px rgba(249,115,22,.28);
+        }
+        .btn-fire:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(236,72,153,.38); }
+
+        /* ═══════════════════════════════════════
+           SUGGESTIONS BANNER
+        ═══════════════════════════════════════ */
+        .suggestions-banner {
+            background: linear-gradient(135deg, rgba(249,115,22,.05), rgba(124,58,237,.05));
+            border: 1.5px solid rgba(249,115,22,.14);
+            border-radius: var(--radius);
+            padding: 24px 28px;
+            margin-bottom: 40px;
+        }
+        .sug-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .sug-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .sug-sub   { font-size: 13px; color: var(--mid); font-weight: 400; }
+        .btn-dismiss {
+            background: none; border: none; color: var(--mid);
+            font-size: 20px; cursor: pointer; line-height: 1;
+            transition: color .15s;
+        }
+        .btn-dismiss:hover { color: var(--dark); }
+        .sug-list { display: flex; gap: 12px; flex-wrap: wrap; }
+        .sug-chip {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--white); border: 1.5px solid var(--light);
+            border-radius: 12px; padding: 12px 16px;
+            text-decoration: none; color: var(--dark);
+            font-size: 13px; font-weight: 600;
+            flex: 1; min-width: 180px;
+            transition: border-color .15s, box-shadow .15s, transform .2s;
+        }
+        .sug-chip:hover {
+            border-color: var(--orange);
+            box-shadow: 0 4px 16px rgba(249,115,22,.12);
+            transform: translateY(-2px);
+        }
+        .sug-chip-ia { border-style: dashed; opacity: .82; }
+        .chip-icon { font-size: 22px; flex-shrink: 0; }
+        .chip-info { overflow: hidden; }
+        .chip-nom  { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chip-type { font-size: 11px; font-weight: 500; color: var(--mid); margin-top: 2px; }
+
+        /* ═══════════════════════════════════════
+           CARTE (MAP)
+        ═══════════════════════════════════════ */
+        .map-section { margin-bottom: 56px; }
+        .section-label {
+            font-size: 11px; font-weight: 800; color: var(--mid);
+            text-transform: uppercase; letter-spacing: .8px;
+            margin-bottom: 12px;
+        }
+        #map {
+            width: 100%; height: 420px;
+            border-radius: var(--radius);
+            border: 1px solid var(--light);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+        .leaflet-popup-content-wrapper {
+            border-radius: 14px !important;
+            box-shadow: var(--shadow-md) !important;
+            font-family: "Inter", sans-serif !important;
+            padding: 0 !important;
+        }
+        .leaflet-popup-content { margin: 0 !important; min-width: 180px; }
+        .popup-inner { padding: 14px 16px; }
+        .popup-name { font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 8px; line-height: 1.3; }
+        .popup-link {
+            display: inline-block; padding: 6px 14px;
+            background: linear-gradient(135deg, #f97316, #ec4899);
+            color: #fff; border-radius: 8px;
+            font-size: 12px; font-weight: 600; text-decoration: none;
+        }
+
+        /* ═══════════════════════════════════════
+           TITRES DE SECTION
+        ═══════════════════════════════════════ */
+        .section-title {
+            font-size: 20px; font-weight: 800;
+            color: var(--dark); margin-bottom: 24px;
+            display: flex; align-items: center; gap: 10px;
+            letter-spacing: -.3px;
+        }
+        .pill {
+            font-size: 12px; font-weight: 700;
+            background: linear-gradient(135deg, rgba(249,115,22,.1), rgba(124,58,237,.1));
+            color: var(--violet);
+            padding: 3px 11px; border-radius: 20px;
+            border: 1px solid rgba(124,58,237,.15);
+        }
+
+        /* ═══════════════════════════════════════
+           GROUPES VILLES
+        ═══════════════════════════════════════ */
+        .ville-group { margin-bottom: 48px; }
+        .ville-header {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 20px; padding-bottom: 12px;
+            border-bottom: 2px solid var(--light);
+        }
+        .ville-nom { font-size: 22px; font-weight: 800; letter-spacing: -.4px; }
+
+        /* ═══════════════════════════════════════
+           GRILLE + CARTES ACTIVITÉ
+        ═══════════════════════════════════════ */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 22px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            overflow: hidden;
+            display: flex; flex-direction: column;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(0,0,0,.04);
+            transition: box-shadow .3s, transform .3s;
+        }
+        @media (hover: hover) {
+            .card:hover { box-shadow: var(--shadow-lg); transform: translateY(-7px); }
+        }
+
+        .card-visual { position: relative; overflow: hidden; }
+
+        .card-img {
+            width: 100%; height: 190px;
+            object-fit: cover; display: block;
+            transition: transform .4s ease;
+        }
+        @media (hover: hover) { .card:hover .card-img { transform: scale(1.06); } }
+
+        .card-placeholder {
+            height: 190px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 64px; font-weight: 900;
+            color: rgba(255,255,255,.92); user-select: none;
+            letter-spacing: -2px; position: relative;
+        }
+        .card-placeholder::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,.1) 50%, transparent 60%);
+        }
+
+        .g0 { background: linear-gradient(150deg, #f97316, #ec4899); }
+        .g1 { background: linear-gradient(150deg, #7c3aed, #4f46e5); }
+        .g2 { background: linear-gradient(150deg, #059669, #10b981); }
+        .g3 { background: linear-gradient(150deg, #d97706, #f59e0b); }
+        .g4 { background: linear-gradient(150deg, #0369a1, #0ea5e9); }
+        .g5 { background: linear-gradient(150deg, #db2777, #f472b6); }
+        .g6 { background: linear-gradient(150deg, #4f46e5, #818cf8); }
+        .g7 { background: linear-gradient(150deg, #b45309, #fbbf24); }
+
+        .card-domain {
+            position: absolute; bottom: 10px; left: 12px;
+            background: rgba(0,0,0,.55);
+            backdrop-filter: blur(8px);
+            color: #fff; font-size: 11px; font-weight: 500;
+            padding: 3px 10px; border-radius: 20px;
+            max-width: calc(100% - 24px);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+
+        .card-body { padding: 18px 20px 10px; flex: 1; }
+
+        .card-name {
+            font-size: 15px; font-weight: 700; line-height: 1.35;
+            display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden;
+        }
+
+        .trip-tag {
+            display: inline-flex; align-items: center; gap: 4px;
+            margin-top: 8px; font-size: 11px; font-weight: 700;
+            background: linear-gradient(135deg, rgba(249,115,22,.1), rgba(236,72,153,.1));
+            color: var(--orange); padding: 3px 10px; border-radius: 20px;
+            border: 1px solid rgba(249,115,22,.2);
+        }
+
+        .card-footer {
+            padding: 12px 20px 18px;
+            display: flex; gap: 8px; align-items: center;
+        }
+
+        .btn-open {
+            flex: 1; padding: 11px 0;
+            background: var(--dark); color: #fff;
+            border: none; border-radius: 12px;
+            font-size: 13px; font-weight: 600; font-family: inherit;
+            text-align: center; text-decoration: none; cursor: pointer;
+            transition: all .2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,.12);
+        }
+        @media (hover: hover) {
+            .btn-open:hover {
+                background: linear-gradient(135deg, #f97316, #ec4899);
+                box-shadow: 0 4px 16px rgba(236,72,153,.32);
+                transform: translateY(-1px);
+            }
+        }
+
+        .btn-del {
+            width: 42px; height: 42px;
+            background: #f9fafb; border: 1.5px solid var(--light);
+            border-radius: 12px; font-size: 15px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .15s; flex-shrink: 0;
+        }
+        @media (hover: hover) {
+            .btn-del:hover { border-color: var(--orange); background: rgba(249,115,22,.06); }
+        }
+
+        /* ═══════════════════════════════════════
+           ÉTAT VIDE
+        ═══════════════════════════════════════ */
+        .empty { text-align: center; padding: 80px 24px; }
+        .empty-icon {
+            width: 88px; height: 88px; border-radius: 24px;
+            background: linear-gradient(135deg, rgba(249,115,22,.10), rgba(124,58,237,.10));
+            border: 2px solid rgba(249,115,22,.14);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 44px; margin: 0 auto 24px;
+        }
+        .empty h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; letter-spacing: -.3px; }
+        .empty p  { font-size: 14px; color: var(--mid); }
+
+        /* ═══════════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════════ */
+        @media (max-width: 800px) {
+            .forms-grid { grid-template-columns: 1fr; }
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+            .hero h1 { font-size: 34px; }
+        }
+
+        @media (max-width: 480px) {
+            header { padding: 0 16px; height: 56px; }
+            .hero { padding: 60px 20px 52px; }
+            .hero h1 { font-size: 28px; letter-spacing: -1px; }
+            .page { padding: 32px 14px 80px; }
+            .form-card { padding: 20px; border-radius: 14px; }
+            .form-col input { font-size: 16px; padding: 13px 14px; }
+            .grid { grid-template-columns: 1fr; gap: 14px; }
+            .card-placeholder, .card-img { height: 160px; }
+            .btn-open { padding: 13px 0; font-size: 14px; }
+            .btn-del  { width: 46px; height: 46px; }
+            #map { height: 260px; border-radius: 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+    <a class="logo" href="/">TripCircuit</a>
+    <div class="header-nav">
+        <a href="/trips" class="nav-btn">✈️ Voyages</a>
+        <a href="/organiser" class="nav-btn active">🗺️ Organiser</a>
+        <span class="header-pill">{{ activites | length }} activité{{ 's' if activites | length != 1 }}</span>
+        <span class="header-pill" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:none;" id="hdr-email">{{ email }}</span>
+        <a href="/logout" class="nav-btn">Déconnexion</a>
+    </div>
+</header>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+        <div class="hero-badge">🌍 Votre carnet de voyage digital</div>
+        <h1>Explorez.<br><span class="grd">Sauvegardez.</span><br>Partagez.</h1>
+        <p>Retrouvez toutes vos expériences en un instant.</p>
+    </div>
+</section>
+
+<main class="page">
+
+    <!-- ══ FILTRE VOYAGE ══ -->
+    {% if trip_actif %}
+    <div class="filter-banner">
+        <span class="filter-text">✈️ Voyage : {{ trip_actif.nom }} — {{ activites | length }} activité{{ 's' if activites | length != 1 }}</span>
+        <a href="/" class="filter-clear">Voir tout</a>
+    </div>
+    {% endif %}
+
+    <!-- ══ SUGGESTIONS ══ -->
+    {% if nouvelle and (suggestions or suggestions_ia) %}
+    <div class="suggestions-banner" id="suggestions-banner">
+        <div class="sug-header">
+            <div class="sug-title">
+                {{ nouvelle.icone or '📌' }}
+                <span>"{{ nouvelle.nom }}" ajoutée ! <span class="sug-sub">— Activités similaires :</span></span>
+            </div>
+            <button class="btn-dismiss" onclick="document.getElementById('suggestions-banner').remove()">×</button>
+        </div>
+        <div class="sug-list">
+            {% for s in suggestions %}
+            <a class="sug-chip" href="{{ s.lien }}" target="_blank" rel="noopener">
+                <span class="chip-icon">{{ s.icone or '📌' }}</span>
+                <div class="chip-info">
+                    <div class="chip-nom">{{ s.nom }}</div>
+                    <div class="chip-type">{{ s.type or 'Activité' }}</div>
+                </div>
+            </a>
+            {% endfor %}
+            {% for nom_ia in suggestions_ia %}
+            <div class="sug-chip sug-chip-ia">
+                <span class="chip-icon">✨</span>
+                <div class="chip-info">
+                    <div class="chip-nom">{{ nom_ia }}</div>
+                    <div class="chip-type">Suggestion IA</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══ FORMULAIRES ══ -->
+    <div class="forms-grid">
+
+        <div class="form-card import">
+            <div class="form-title">
+                <span class="form-icon fi-v">⚡</span>
+                Importer depuis un lien
+            </div>
+            <p class="form-hint">TikTok, YouTube, site web… le titre est extrait automatiquement.</p>
+            <form action="/importer" method="post">
+                <div class="form-col">
+                    <input type="url"  name="lien"  placeholder="https://www.youtube.com/..." required>
+                    <input type="text" name="ville" placeholder="Ville (ex: Paris)">
+                    {% if trips %}
+                    <select name="trip_id">
+                        <option value="">— Aucun voyage —</option>
+                        {% for t in trips %}
+                        <option value="{{ t.id }}">✈️ {{ t.nom }}</option>
+                        {% endfor %}
+                    </select>
+                    {% endif %}
+                    <button type="submit" class="btn btn-indigo">Importer →</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="form-card manual">
+            <div class="form-title">
+                <span class="form-icon fi-o">✏️</span>
+                Ajouter manuellement
+            </div>
+            <p class="form-hint">Nom, lien et image personnalisés.</p>
+            <form action="/ajouter" method="post" enctype="multipart/form-data">
+                <div class="form-col">
+                    <input type="text" name="nom"   placeholder="Nom de l'activité" required>
+                    <input type="text" name="ville" placeholder="Ville (ex: Tokyo)">
+                    <input type="url"  name="lien"  placeholder="https://..." required>
+                    <input type="file" name="image" accept="image/jpeg,image/png">
+                    <div style="display:flex; gap:8px;">
+                        <input type="number" name="lat" placeholder="Latitude"  step="any" style="flex:1">
+                        <input type="number" name="lng" placeholder="Longitude" step="any" style="flex:1">
+                    </div>
+                    {% if trips %}
+                    <select name="trip_id">
+                        <option value="">— Aucun voyage —</option>
+                        {% for t in trips %}
+                        <option value="{{ t.id }}">✈️ {{ t.nom }}</option>
+                        {% endfor %}
+                    </select>
+                    {% endif %}
+                    <button type="submit" class="btn btn-fire">+ Ajouter</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- ══ MAP ══ -->
+    <div class="map-section">
+        <div class="section-label">🗺️ Carte des activités</div>
+        <div id="map"></div>
+    </div>
+
+    <!-- ══ LISTE ══ -->
+    <div class="section-title">
+        Mes activités
+        <span class="pill">{{ activites | length }}</span>
+    </div>
+
+    {% if activites %}
+
+    {% set avec_ville  = activites | selectattr("ville") | list %}
+    {% set sans_ville  = activites | rejectattr("ville") | list %}
+
+    {% for ville, groupe in avec_ville | groupby("ville") %}
+    <div class="ville-group">
+        <div class="ville-header">
+            <span style="font-size:22px;">📍</span>
+            <span class="ville-nom">{{ ville }}</span>
+            <span class="pill">{{ groupe | list | length }}</span>
+        </div>
+        <div class="grid">
+            {% for a in groupe %}
+            <div class="card">
+                <div class="card-visual">
+                    {% if a.image %}
+                        <img class="card-img" src="/static/uploads/{{ a.image }}" alt="{{ a.nom }}">
+                    {% else %}
+                        <div class="card-placeholder g{{ a.id % 8 }}">{{ a.nom[0] | upper }}</div>
+                    {% endif %}
+                    <span class="card-domain">{{ a.lien | replace("https://","") | replace("http://","") | truncate(36,True,"…") }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="card-name">{{ a.nom }}</div>
+                    {% if a.trip_id and trips_par_id.get(a.trip_id) %}
+                    <div class="trip-tag">✈️ {{ trips_par_id[a.trip_id].nom }}</div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ a.lien }}" target="_blank" rel="noopener" class="btn-open">Ouvrir →</a>
+                    <form action="/supprimer/{{ a.id }}" method="post">
+                        <button type="submit" class="btn-del" title="Supprimer">🗑️</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if sans_ville %}
+    <div class="ville-group">
+        <div class="ville-header">
+            <span style="font-size:22px;">🌍</span>
+            <span class="ville-nom">Autre</span>
+            <span class="pill">{{ sans_ville | length }}</span>
+        </div>
+        <div class="grid">
+            {% for a in sans_ville %}
+            <div class="card">
+                <div class="card-visual">
+                    {% if a.image %}
+                        <img class="card-img" src="/static/uploads/{{ a.image }}" alt="{{ a.nom }}">
+                    {% else %}
+                        <div class="card-placeholder g{{ a.id % 8 }}">{{ a.nom[0] | upper }}</div>
+                    {% endif %}
+                    <span class="card-domain">{{ a.lien | replace("https://","") | replace("http://","") | truncate(36,True,"…") }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="card-name">{{ a.nom }}</div>
+                    {% if a.trip_id and trips_par_id.get(a.trip_id) %}
+                    <div class="trip-tag">✈️ {{ trips_par_id[a.trip_id].nom }}</div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ a.lien }}" target="_blank" rel="noopener" class="btn-open">Ouvrir →</a>
+                    <form action="/supprimer/{{ a.id }}" method="post">
+                        <button type="submit" class="btn-del" title="Supprimer">🗑️</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty">
+        <div class="empty-icon">✈️</div>
+        <h3>Aucune activité pour l'instant</h3>
+        <p>Importez un lien ou ajoutez une activité ci-dessus.</p>
+    </div>
+    {% endif %}
+
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    if (window.innerWidth >= 640) {
+        const el = document.getElementById("hdr-email");
+        if (el) el.style.display = "inline-block";
+    }
+
+    const activites = {{ activites | tojson }};
+    const map = L.map("map").setView([20, 10], 2);
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    const bounds = [];
+    const LAT_DEF = 48.8566, LNG_DEF = 2.3522;
+
+    activites.forEach(function(a) {
+        const lat = a.lat ?? LAT_DEF;
+        const lng = a.lng ?? LNG_DEF;
+        const popup = `<div class="popup-inner"><div class="popup-name">${a.nom}</div><a class="popup-link" href="${a.lien}" target="_blank" rel="noopener">Ouvrir →</a></div>`;
+        L.marker([lat, lng]).addTo(map).bindPopup(popup);
+        bounds.push([lat, lng]);
+    });
+
+    if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+</script>
+</body>
+</html>

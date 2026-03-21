@@ -1,0 +1,47 @@
+[
+  {
+    "id": 2,
+    "nom": "https://www.viator.com/fr-FR/tours/Agadir/From-Marrakech-Day-trip-to-the-Atlas-Mountains/d4383-232372P21",
+    "ville": "agadir",
+    "trip_id": 1,
+    "lien": "https://www.viator.com/fr-FR/tours/Agadir/From-Marrakech-Day-trip-to-the-Atlas-Mountains/d4383-232372P21",
+    "image": "",
+    "lat": 48.8566,
+    "lng": 2.3522,
+    "type": "Nature",
+    "categorie": "nature",
+    "icone": "🌿",
+    "description": "Espace naturel à explorer",
+    "suggestions_ia": []
+  },
+  {
+    "id": 3,
+    "nom": "TikTok - Make Your Day",
+    "ville": "agadir",
+    "trip_id": 1,
+    "lien": "https://www.tiktok.com/@travel.addict11/video/7220861851607764229",
+    "image": "",
+    "lat": 48.8566,
+    "lng": 2.3522,
+    "type": "Activité",
+    "categorie": "autre",
+    "icone": "📌",
+    "description": "Activité à découvrir",
+    "suggestions_ia": []
+  },
+  {
+    "id": 4,
+    "nom": "https://www.getyourguide.com/fr-fr/budapest-l29/budapest-visite-a-pied-des-grottes-du-chateau-de-buda-t391260/?partner_id=XYJ201A&psrc=partner_api&currency=EUR&cmp=id_21976&date=2026-03-21&mkt_cmp=true&visitor-id=KXL379ZF7J6RISV2AGTMD8CYO40YWFGK",
+    "ville": "budapest",
+    "trip_id": 2,
+    "lien": "https://www.getyourguide.com/fr-fr/budapest-l29/budapest-visite-a-pied-des-grottes-du-chateau-de-buda-t391260/?partner_id=XYJ201A&psrc=partner_api&currency=EUR&cmp=id_21976&date=2026-03-21&mkt_cmp=true&visitor-id=KXL379ZF7J6RISV2AGTMD8CYO40YWFGK",
+    "image": "",
+    "lat": 48.8566,
+    "lng": 2.3522,
+    "type": "Musée",
+    "categorie": "culture",
+    "icone": "🏛️",
+    "description": "Lieu culturel incontournable",
+    "suggestions_ia": []
+  }
+]
