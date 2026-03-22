@@ -1674,28 +1674,67 @@ def service_worker():
 
 @app.route("/sitemap.xml")
 def sitemap():
-    """Sitemap XML pour Google — pages SEO villes."""
+    """Sitemap XML complet pour Google."""
     from datetime import date
     today = date.today().isoformat()
-    urls  = []
+
+    BASE = "https://goandtrip.com"
+
+    urls = [
+        # Pages principales
+        {"loc": f"{BASE}/",          "changefreq": "daily",  "priority": "1.0"},
+        {"loc": f"{BASE}/organiser", "changefreq": "weekly", "priority": "0.9"},
+        # Pages SEO villes
+    ]
 
     for slug in _VILLES_SITEMAP:
-        urls.append({"loc": f"https://goandtrip.fr/quoi-faire-a-{slug}", "priority": "0.8"})
+        urls.append({
+            "loc":        f"{BASE}/quoi-faire-a-{slug}",
+            "changefreq": "weekly",
+            "priority":   "0.8",
+        })
         for d in _DUREES_POPULAIRES:
-            urls.append({"loc": f"https://goandtrip.fr/quoi-faire-a-{slug}-{d}-jours", "priority": "0.7"})
+            urls.append({
+                "loc":        f"{BASE}/quoi-faire-a-{slug}-{d}-jours",
+                "changefreq": "monthly",
+                "priority":   "0.7",
+            })
 
-    xml = ['<?xml version="1.0" encoding="UTF-8"?>',
-           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    xml = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
     for u in urls:
         xml.append(
-            f'  <url><loc>{u["loc"]}</loc>'
+            f'  <url>'
+            f'<loc>{u["loc"]}</loc>'
             f'<lastmod>{today}</lastmod>'
-            f'<changefreq>weekly</changefreq>'
-            f'<priority>{u["priority"]}</priority></url>'
+            f'<changefreq>{u["changefreq"]}</changefreq>'
+            f'<priority>{u["priority"]}</priority>'
+            f'</url>'
         )
     xml.append('</urlset>')
 
     return "\n".join(xml), 200, {"Content-Type": "application/xml; charset=utf-8"}
+
+
+@app.route("/robots.txt")
+def robots():
+    """robots.txt — indique le sitemap aux moteurs de recherche."""
+    content = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /api/\n"
+        "Disallow: /login\n"
+        "Disallow: /register\n"
+        "Disallow: /trips\n"
+        "Disallow: /logout\n"
+        "Disallow: /forgot-password\n"
+        "Disallow: /reset-password/\n"
+        "\n"
+        "Sitemap: https://goandtrip.com/sitemap.xml\n"
+    )
+    return content, 200, {"Content-Type": "text/plain; charset=utf-8"}
 
 
 # ── API OpenAI — génération d'itinéraire ─────────────────
