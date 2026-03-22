@@ -1664,6 +1664,14 @@ def seo_ville(ville: str):
     return render_template("seo_ville.html", **_seo_context(ville, None))
 
 
+@app.route("/sw.js")
+def service_worker():
+    """Service worker servi depuis la racine (scope /)."""
+    from flask import send_from_directory
+    return send_from_directory("static", "sw.js",
+                               mimetype="application/javascript")
+
+
 @app.route("/sitemap.xml")
 def sitemap():
     """Sitemap XML pour Google — pages SEO villes."""

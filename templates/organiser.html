@@ -8,6 +8,10 @@
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="shortcut icon" href="/static/favicon.svg">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#7c3aed">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -606,6 +610,46 @@
             animation: fadeIn .2s ease both;
         }
 
+        /* ══ PWA BANNER ══ */
+        .pwa-banner {
+            display: none;          /* caché par défaut, affiché par JS */
+            margin-top: 32px;
+            background: linear-gradient(135deg, rgba(124,58,237,.07), rgba(249,115,22,.06));
+            border: 1.5px solid rgba(124,58,237,.18);
+            border-radius: var(--radius);
+            padding: 18px 22px;
+            align-items: center; justify-content: space-between;
+            gap: 14px; flex-wrap: wrap;
+            animation: fadeIn .3s ease both;
+        }
+        .pwa-banner-left { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+        .pwa-icon        { width: 44px; height: 44px; border-radius: 11px; flex-shrink: 0; }
+        .pwa-title       { font-size: 15px; font-weight: 800; color: var(--dark); margin-bottom: 3px; }
+        .pwa-sub         { font-size: 13px; color: var(--mid); line-height: 1.45; }
+
+        .pwa-actions     { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+        .btn-pwa-install {
+            padding: 11px 20px;
+            background: var(--brand); color: #fff;
+            border: none; border-radius: 11px;
+            font-size: 14px; font-weight: 700; font-family: inherit;
+            cursor: pointer; white-space: nowrap;
+            transition: transform .2s, box-shadow .2s;
+            box-shadow: 0 4px 14px rgba(124,58,237,.28);
+        }
+        .btn-pwa-install:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(124,58,237,.38); }
+
+        .btn-pwa-dismiss {
+            width: 32px; height: 32px;
+            background: transparent; color: var(--mid);
+            border: 1.5px solid var(--light); border-radius: 8px;
+            font-size: 14px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .15s; flex-shrink: 0;
+        }
+        .btn-pwa-dismiss:hover { border-color: var(--orange); color: var(--orange); }
+
         /* ══ RESPONSIVE ══ */
         @media (max-width: 640px) {
             header { padding: 0 16px; }
@@ -624,6 +668,8 @@
             .btn-save { width: 100%; text-align: center; padding: 13px; }
             .share-url-row { flex-direction: column; }
             .btn-copy, .btn-open { width: 100%; text-align: center; }
+            .pwa-banner { flex-direction: column; align-items: flex-start; }
+            .btn-pwa-install { width: 100%; text-align: center; }
         }
     </style>
 </head>
@@ -796,6 +842,23 @@
                 <a class="btn-open" id="btn-open" href="#" target="_blank" rel="noopener">Ouvrir →</a>
             </div>
             <div class="copy-toast" id="copy-toast">✓ Lien copié !</div>
+        </div>
+
+        <!-- ── Bannière installation PWA ── -->
+        <div class="pwa-banner" id="pwa-banner">
+            <div class="pwa-banner-left">
+                <img src="/static/favicon.svg" class="pwa-icon" alt="GoAndTrip">
+                <div>
+                    <div class="pwa-title">Installer GoAndTrip</div>
+                    <div class="pwa-sub">Ajoute GoAndTrip à ton écran pour planifier tes voyages plus facilement</div>
+                </div>
+            </div>
+            <div class="pwa-actions">
+                <button class="btn-pwa-install" id="btn-pwa-install" type="button">
+                    📱 Installer
+                </button>
+                <button class="btn-pwa-dismiss" id="btn-pwa-dismiss" type="button" aria-label="Fermer">✕</button>
+            </div>
         </div>
 
         <!-- Lien vers planning existant depuis activités enregistrées -->
@@ -1313,6 +1376,82 @@
             </div>
             <div class="aff-mention">🔗 Liens partenaires</div>
         `;
+    }
+
+    /* ══════════════════════════════════════════
+       MODULE PWA — Installation
+    ══════════════════════════════════════════ */
+
+    const pwaBanner     = document.getElementById('pwa-banner');
+    const btnPwaInstall = document.getElementById('btn-pwa-install');
+    const btnPwaDismiss = document.getElementById('btn-pwa-dismiss');
+
+    let deferredPrompt = null;   // stocke l'événement beforeinstallprompt
+
+    // L'utilisateur a déjà fermé la bannière dans cette session ?
+    const pwaDismissed = sessionStorage.getItem('pwa-dismissed');
+
+    // Capture du prompt natif (Chrome / Edge / Android)
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();            // empêche le prompt automatique
+        deferredPrompt = e;
+
+        // Afficher seulement si le résultat existe ET que l'user n'a pas refusé
+        if (!pwaDismissed) {
+            showPwaBanner();
+        }
+    });
+
+    // Ne plus afficher si déjà installé
+    window.addEventListener('appinstalled', () => {
+        hidePwaBanner();
+        deferredPrompt = null;
+    });
+
+    function showPwaBanner() {
+        pwaBanner.style.display = 'flex';
+    }
+
+    function hidePwaBanner() {
+        pwaBanner.style.display = 'none';
+    }
+
+    // Clic "Installer" → déclenche le prompt natif
+    btnPwaInstall.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+
+        deferredPrompt.prompt();
+
+        const { outcome } = await deferredPrompt.userChoice;
+
+        if (outcome === 'accepted') {
+            hidePwaBanner();
+        }
+        deferredPrompt = null;
+    });
+
+    // Clic "✕" → ferme la bannière pour cette session
+    btnPwaDismiss.addEventListener('click', () => {
+        hidePwaBanner();
+        sessionStorage.setItem('pwa-dismissed', '1');
+    });
+
+    // Afficher la bannière après génération d'un voyage (si prompt disponible)
+    const _origShowResult = showResult;
+    function showResult(data, params) {
+        _origShowResult(data, params);
+        // Petit délai pour ne pas surcharger visuellement
+        if (deferredPrompt && !pwaDismissed) {
+            setTimeout(showPwaBanner, 1200);
+        }
+    }
+
+    // Enregistrement du Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .catch(err => console.warn('SW registration failed:', err));
+        });
     }
 
 })();
