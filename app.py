@@ -959,7 +959,11 @@ def supprimer_image(nom_fichier: str) -> None:
 def index():
     if "user_id" in session:
         return redirect(url_for("organiser"))
-    return redirect(url_for("login"))
+    # Visiteur non connecté — affiche la landing page
+    return render_template("index.html",
+                           activites=[], trips=[], trips_par_id={},
+                           trip_actif=None, nouvelle=None,
+                           suggestions=[], suggestions_ia=[], email=None)
 
 
 @app.route("/ajouter", methods=["POST"])
