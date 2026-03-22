@@ -1322,7 +1322,7 @@ def api_save_trip():
         ai_trips = ai_trips[-29:]   # garde les 29 plus récents, libère une place
 
     share_id = uuid.uuid4().hex          # ex : "4a7f2bc1e3d09812..."
-    base_url = os.getenv("BASE_URL", "http://localhost:5000")
+    base_url = request.host_url.rstrip("/")
 
     record = {
         "share_id":   share_id,
