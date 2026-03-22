@@ -14,7 +14,7 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 import requests
 from bs4 import BeautifulSoup
-from flask import Flask, render_template, request, redirect, session, abort, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, abort, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from authlib.integrations.flask_client import OAuth
@@ -956,54 +956,8 @@ def supprimer_image(nom_fichier: str) -> None:
 
 
 @app.route("/")
-@login_required
 def index():
-    return render_template(
-        "index.html",
-        activites=[],
-        trips=[]
-    )
-
-    # Filtre optionnel par voyage — avec contrôle d'accès strict
-    trip_id_filtre = request.args.get("trip", type=int)
-    trip_actif = None
-    if trip_id_filtre:
-        acces = trouver_trip_avec_acces(uid, trip_id_filtre)
-        if acces is None:
-            abort(403)  # ni propriétaire ni collaborateur
-        trip_actif = acces["trip"]
-        if acces["est_proprio"]:
-            activites = [a for a in toutes_activites if a.get("trip_id") == trip_id_filtre]
-        else:
-            # Collaborateur → charger les activités du propriétaire
-            activites_owner = charger(acces["owner_id"])
-            activites = [a for a in activites_owner if a.get("trip_id") == trip_id_filtre]
-    else:
-        activites = toutes_activites
-
-    nouvelle    = None
-    suggestions = []
-
-    nouveau_id = request.args.get("nouveau", type=int)
-    if nouveau_id:
-        nouvelle = next((a for a in toutes_activites if a["id"] == nouveau_id), None)
-        if nouvelle:
-            suggestions = suggerer(nouvelle, toutes_activites)
-
-    suggestions_ia = nouvelle.get("suggestions_ia", []) if nouvelle else []
-
-    # Index trips par id pour affichage dans les cartes
-    trips_par_id = {t["id"]: t for t in tous_les_trips}
-
-    return render_template("index.html",
-                           activites=activites,
-                           trips=tous_les_trips,
-                           trips_par_id=trips_par_id,
-                           trip_actif=trip_actif,
-                           nouvelle=nouvelle,
-                           suggestions=suggestions,
-                           suggestions_ia=suggestions_ia,
-                           email=session.get("email"))
+    return redirect(url_for("organiser"))
 
 
 @app.route("/ajouter", methods=["POST"])
