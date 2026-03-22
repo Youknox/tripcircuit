@@ -10,6 +10,7 @@ import re
 import time
 from functools import wraps
 from datetime import datetime, timezone
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 import requests
 from bs4 import BeautifulSoup
@@ -1294,6 +1295,117 @@ def register():
 def logout():
     session.clear()
     return redirect("/login")
+
+
+# ══════════════════════════════════════════════════════════
+#  MOT DE PASSE OUBLIÉ
+# ══════════════════════════════════════════════════════════
+
+_RESET_SALT = "goandtrip-password-reset"
+
+
+def _gen_reset_token(email: str) -> str:
+    """Génère un token signé contenant l'email, valide 1 heure."""
+    s = URLSafeTimedSerializer(app.secret_key)
+    return s.dumps(email.lower(), salt=_RESET_SALT)
+
+
+def _verify_reset_token(token: str, max_age: int = 3600) -> str | None:
+    """Retourne l'email si le token est valide et non expiré, None sinon."""
+    s = URLSafeTimedSerializer(app.secret_key)
+    try:
+        email = s.loads(token, salt=_RESET_SALT, max_age=max_age)
+        return email
+    except (SignatureExpired, BadSignature):
+        return None
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+@limiter.limit("5 per hour")
+def forgot_password():
+    if request.method == "GET":
+        return render_template("forgot_password.html", message=None, erreur=None)
+
+    email = request.form.get("email", "").strip().lower()
+
+    # Message identique qu'il existe ou non (ne pas révéler l'existence du compte)
+    MSG_OK = "Si cet email est enregistré, un lien vient d'être envoyé. Vérifiez vos spams."
+
+    if not email or "@" not in email or len(email) > 254:
+        return render_template("forgot_password.html",
+                               erreur="Adresse email invalide.", message=None)
+
+    users  = charger_users()
+    user   = next((u for u in users if u["email"] == email), None)
+
+    if user and user.get("mdp") is not None:
+        # Uniquement pour les comptes avec mot de passe (pas OAuth only)
+        token     = _gen_reset_token(email)
+        base_url  = os.getenv("BASE_URL", "http://localhost:5000")
+        reset_url = f"{base_url}/reset-password/{token}"
+
+        # ── Envoi simulé en console (remplacez par SMTP en production) ──
+        print("\n" + "=" * 65)
+        print("  [GOANDTRIP] Réinitialisation du mot de passe")
+        print(f"  Email  : {email}")
+        print(f"  Lien   : {reset_url}")
+        print(f"  Expire : dans 1 heure")
+        print("=" * 65 + "\n")
+
+        security_logger.info(
+            "password_reset_requested email=%s ip=%s", email, request.remote_addr
+        )
+
+    return render_template("forgot_password.html", message=MSG_OK, erreur=None)
+
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    email = _verify_reset_token(token)
+
+    if email is None:
+        return render_template(
+            "reset_password.html",
+            token=None,
+            erreur="Ce lien est expiré ou invalide. Faites une nouvelle demande.",
+            message=None,
+        )
+
+    if request.method == "GET":
+        return render_template("reset_password.html",
+                               token=token, erreur=None, message=None)
+
+    # POST — changement effectif du mot de passe
+    mdp         = request.form.get("mdp", "").strip()
+    mdp_confirm = request.form.get("mdp_confirm", "").strip()
+
+    if len(mdp) < 6:
+        return render_template("reset_password.html", token=token,
+                               erreur="Mot de passe trop court (min. 6 caractères).", message=None)
+    if mdp != mdp_confirm:
+        return render_template("reset_password.html", token=token,
+                               erreur="Les mots de passe ne correspondent pas.", message=None)
+
+    users = charger_users()
+    user  = next((u for u in users if u["email"] == email), None)
+
+    if not user:
+        return render_template("reset_password.html", token=None,
+                               erreur="Compte introuvable.", message=None)
+
+    user["mdp"] = hash_mdp(mdp)
+    sauvegarder_users(users)
+
+    security_logger.info(
+        "password_reset_success email=%s ip=%s", email, request.remote_addr
+    )
+
+    return render_template(
+        "reset_password.html",
+        token=None,
+        erreur=None,
+        message="Mot de passe mis à jour ! Vous pouvez maintenant vous connecter.",
+    )
 
 
 # ── Routes SEO — /quoi-faire-a-<ville> ───────────────────
