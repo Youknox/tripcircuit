@@ -650,6 +650,27 @@
         }
         .btn-pwa-dismiss:hover { border-color: var(--orange); color: var(--orange); }
 
+        .pwa-ios {
+            display: none;
+            margin-top: 32px;
+            background: linear-gradient(135deg, rgba(0,122,255,.06), rgba(124,58,237,.06));
+            border: 1.5px solid rgba(0,122,255,.20);
+            border-radius: var(--radius);
+            padding: 18px 22px;
+            align-items: center; justify-content: space-between;
+            gap: 14px; flex-wrap: wrap;
+            animation: fadeIn .3s ease both;
+        }
+        .pwa-ios-left { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+        .ios-step {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: rgba(124,58,237,.10);
+            border: 1px solid rgba(124,58,237,.18);
+            border-radius: 6px; padding: 2px 8px;
+            font-weight: 700; color: var(--violet); font-size: 12px;
+            white-space: nowrap;
+        }
+
         /* ══ RESPONSIVE ══ */
         @media (max-width: 640px) {
             header { padding: 0 16px; }
@@ -859,6 +880,20 @@
                 </button>
                 <button class="btn-pwa-dismiss" id="btn-pwa-dismiss" type="button" aria-label="Fermer">✕</button>
             </div>
+        </div>
+
+        <!-- ── Message iOS (Safari) ── -->
+        <div class="pwa-ios" id="pwa-ios">
+            <div class="pwa-ios-left">
+                <img src="/static/favicon.svg" class="pwa-icon" alt="GoAndTrip">
+                <div>
+                    <div class="pwa-title">Installer GoAndTrip sur iPhone</div>
+                    <div class="pwa-sub">
+                        Appuie sur <span class="ios-step"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='%237c3aed'%3E%3Cpath d='M12 2l-4 4h3v8h2V6h3L12 2zM4 17v3h16v-3h-2v1H6v-1H4z'/%3E%3C/svg%3E" alt=""> Partager</span> puis <span class="ios-step">Ajouter à l'écran d'accueil</span>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-pwa-dismiss" id="btn-ios-dismiss" type="button" aria-label="Fermer">✕</button>
         </div>
 
         <!-- Lien vers planning existant depuis activités enregistrées -->
@@ -1385,8 +1420,14 @@
     const pwaBanner     = document.getElementById('pwa-banner');
     const btnPwaInstall = document.getElementById('btn-pwa-install');
     const btnPwaDismiss = document.getElementById('btn-pwa-dismiss');
+    const pwaIos        = document.getElementById('pwa-ios');
+    const btnIosDismiss = document.getElementById('btn-ios-dismiss');
 
-    let deferredPrompt = null;   // stocke l'événement beforeinstallprompt
+    let deferredPrompt = null;
+
+    // Détection iOS (iPhone / iPad)
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isInStandaloneMode = window.navigator.standalone === true;
 
     // L'utilisateur a déjà fermé la bannière dans cette session ?
     const pwaDismissed = sessionStorage.getItem('pwa-dismissed');
@@ -1436,14 +1477,26 @@
         sessionStorage.setItem('pwa-dismissed', '1');
     });
 
+    // Dismiss iOS
+    btnIosDismiss.addEventListener('click', () => {
+        pwaIos.style.display = 'none';
+        sessionStorage.setItem('pwa-dismissed', '1');
+    });
+
     // Afficher la bannière après génération d'un voyage (si prompt disponible)
     const _origShowResult = showResult;
     function showResult(data, params) {
         _origShowResult(data, params);
-        // Petit délai pour ne pas surcharger visuellement
-        if (deferredPrompt && !pwaDismissed) {
-            setTimeout(showPwaBanner, 1200);
-        }
+        setTimeout(() => {
+            if (pwaDismissed) return;
+            if (isIos && !isInStandaloneMode) {
+                // iOS Safari : montrer les instructions manuelles
+                pwaIos.style.display = 'flex';
+            } else if (deferredPrompt) {
+                // Android / Chrome / Edge : prompt natif
+                showPwaBanner();
+            }
+        }, 1200);
     }
 
     // Enregistrement du Service Worker
