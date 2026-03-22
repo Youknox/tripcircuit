@@ -1035,6 +1035,9 @@
 
         /* Lancement de la carte en arrière-plan */
         buildMap(data.trip, params.ville);
+
+        /* Bannière PWA après génération */
+        setTimeout(triggerPwaBanner, 1200);
     }
 
     /* ════════════════════════════════════════
@@ -1483,20 +1486,14 @@
         sessionStorage.setItem('pwa-dismissed', '1');
     });
 
-    // Afficher la bannière après génération d'un voyage (si prompt disponible)
-    const _origShowResult = showResult;
-    function showResult(data, params) {
-        _origShowResult(data, params);
-        setTimeout(() => {
-            if (pwaDismissed) return;
-            if (isIos && !isInStandaloneMode) {
-                // iOS Safari : montrer les instructions manuelles
-                pwaIos.style.display = 'flex';
-            } else if (deferredPrompt) {
-                // Android / Chrome / Edge : prompt natif
-                showPwaBanner();
-            }
-        }, 1200);
+    // Appelée depuis showResult() après génération du voyage
+    function triggerPwaBanner() {
+        if (pwaDismissed) return;
+        if (isIos && !isInStandaloneMode) {
+            pwaIos.style.display = 'flex';
+        } else if (deferredPrompt) {
+            showPwaBanner();
+        }
     }
 
     // Enregistrement du Service Worker
