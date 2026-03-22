@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <meta name="description" content="{{ meta_description }}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ canonical }}">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="shortcut icon" href="/static/favicon.svg">
+
+    <!-- Open Graph -->
+    <meta property="og:title"       content="{{ title }}">
+    <meta property="og:description" content="{{ meta_description }}">
+    <meta property="og:type"        content="article">
+    <meta property="og:url"         content="{{ canonical }}">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- JSON-LD structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TouristDestination",
+      "name": "{{ ville }}",
+      "description": "{{ meta_description }}",
+      "url": "{{ canonical }}",
+      "touristType": ["Tourisme", "Voyage", "Activités culturelles"]
+    }
+    </script>
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --orange:  #f97316;
+            --pink:    #ec4899;
+            --violet:  #7c3aed;
+            --indigo:  #4f46e5;
+            --brand:   linear-gradient(135deg, #f97316 0%, #ec4899 55%, #7c3aed 100%);
+            --dark:    #111827;
+            --mid:     #6b7280;
+            --light:   #e5e7eb;
+            --bg:      #f8f9fc;
+            --white:   #ffffff;
+            --radius:  18px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.06);
+            --shadow-md: 0 4px 20px rgba(0,0,0,.09), 0 16px 48px rgba(0,0,0,.10);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,.11), 0 32px 64px rgba(0,0,0,.13);
+        }
+
+        body {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--dark);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── HEADER ── */
+        header {
+            background: rgba(255,255,255,.94);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0,0,0,.06);
+            height: 64px;
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+        }
+        .logo {
+            display: flex; align-items: center; gap: 9px;
+            font-size: 20px; font-weight: 900; text-decoration: none;
+            letter-spacing: -0.6px;
+            background: var(--brand);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header-nav { display: flex; align-items: center; gap: 8px; }
+        .nav-link {
+            padding: 8px 16px; border-radius: 10px;
+            font-size: 13px; font-weight: 600;
+            text-decoration: none; color: var(--mid);
+            transition: all .15s;
+        }
+        .nav-link:hover { background: var(--light); color: var(--dark); }
+        .nav-cta {
+            padding: 9px 18px; border-radius: 10px;
+            font-size: 13px; font-weight: 700;
+            text-decoration: none;
+            background: var(--brand);
+            color: white;
+            box-shadow: 0 4px 14px rgba(249,115,22,.28);
+            transition: transform .2s, box-shadow .2s;
+        }
+        .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(249,115,22,.38); }
+
+        /* ── HERO ── */
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 80px 24px 72px;
+            text-align: center;
+        }
+        .hero-bg {
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse 70% 60% at 15% 45%, rgba(249,115,22,.30) 0%, transparent 55%),
+                radial-gradient(ellipse 65% 70% at 85% 55%, rgba(124,58,237,.36) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 45% at 55% 10%, rgba(236,72,153,.18) 0%, transparent 50%),
+                linear-gradient(170deg, #0d0b1f 0%, #1a1040 45%, #0c1445 100%);
+        }
+        .hero-bg::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.10) 1px, transparent 0);
+            background-size: 36px 36px;
+            mask-image: radial-gradient(ellipse 75% 80% at 50% 50%, black 0%, transparent 100%);
+            -webkit-mask-image: radial-gradient(ellipse 75% 80% at 50% 50%, black 0%, transparent 100%);
+        }
+        .hero-content { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+        .hero-breadcrumb {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px;
+            background: rgba(255,255,255,.10);
+            border: 1px solid rgba(255,255,255,.16);
+            border-radius: 20px;
+            font-size: 12px; font-weight: 600;
+            color: rgba(255,255,255,.70);
+            margin-bottom: 24px;
+            backdrop-filter: blur(8px);
+        }
+        .hero-breadcrumb a { color: rgba(255,255,255,.70); text-decoration: none; }
+        .hero-breadcrumb a:hover { color: white; }
+        .hero-breadcrumb span { color: rgba(255,255,255,.35); }
+
+        /* H1 SEO principal */
+        .hero h1 {
+            font-size: 44px;
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 1.12;
+            color: white;
+            margin-bottom: 16px;
+        }
+        .hero h1 .grd {
+            background: linear-gradient(135deg, #fb923c, #ec4899 50%, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-sub {
+            font-size: 17px;
+            color: rgba(255,255,255,.58);
+            line-height: 1.65;
+            margin-bottom: 32px;
+        }
+        .hero-stats {
+            display: inline-flex; gap: 24px;
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 14px;
+            padding: 14px 28px;
+            backdrop-filter: blur(8px);
+        }
+        .stat-item { text-align: center; }
+        .stat-num { font-size: 22px; font-weight: 900; color: white; letter-spacing: -1px; }
+        .stat-label { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 500; margin-top: 2px; }
+
+        /* ── BREADCRUMB structured (visible) ── */
+        .breadcrumb-bar {
+            background: var(--white);
+            border-bottom: 1px solid var(--light);
+            padding: 12px 40px;
+            font-size: 13px;
+            color: var(--mid);
+        }
+        .breadcrumb-bar a { color: var(--mid); text-decoration: none; }
+        .breadcrumb-bar a:hover { color: var(--dark); }
+        .breadcrumb-bar span { margin: 0 6px; color: var(--light); }
+
+        /* ── PAGE ── */
+        .page { max-width: 1080px; margin: 0 auto; padding: 52px 24px 100px; }
+
+        /* ── SECTION TITLE ── */
+        .section-header { margin-bottom: 28px; }
+        .section-label {
+            font-size: 11px; font-weight: 800; color: var(--mid);
+            text-transform: uppercase; letter-spacing: .8px;
+            margin-bottom: 6px;
+        }
+        /* H2 SEO */
+        .section-title {
+            font-size: 24px; font-weight: 800;
+            color: var(--dark); letter-spacing: -.4px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .pill {
+            font-size: 12px; font-weight: 700;
+            background: linear-gradient(135deg, rgba(249,115,22,.1), rgba(124,58,237,.1));
+            color: var(--violet); padding: 3px 11px;
+            border-radius: 20px; border: 1px solid rgba(124,58,237,.15);
+        }
+        .section-intro {
+            font-size: 15px; color: var(--mid); line-height: 1.65;
+            margin-top: 8px; max-width: 620px;
+        }
+
+        /* ── GRILLE ACTIVITÉS ── */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 22px;
+            margin-bottom: 56px;
+        }
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            overflow: hidden;
+            display: flex; flex-direction: column;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(0,0,0,.04);
+            transition: box-shadow .3s, transform .3s;
+        }
+        @media (hover: hover) {
+            .card:hover { box-shadow: var(--shadow-lg); transform: translateY(-7px); }
+        }
+        .card-visual { position: relative; overflow: hidden; }
+        .card-img {
+            width: 100%; height: 190px;
+            object-fit: cover; display: block;
+            transition: transform .4s ease;
+        }
+        @media (hover: hover) { .card:hover .card-img { transform: scale(1.06); } }
+        .card-placeholder {
+            height: 190px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 64px; font-weight: 900;
+            color: rgba(255,255,255,.92); user-select: none;
+        }
+        .g0 { background: linear-gradient(150deg, #f97316, #ec4899); }
+        .g1 { background: linear-gradient(150deg, #7c3aed, #4f46e5); }
+        .g2 { background: linear-gradient(150deg, #059669, #10b981); }
+        .g3 { background: linear-gradient(150deg, #d97706, #f59e0b); }
+        .g4 { background: linear-gradient(150deg, #0369a1, #0ea5e9); }
+        .g5 { background: linear-gradient(150deg, #db2777, #f472b6); }
+        .g6 { background: linear-gradient(150deg, #4f46e5, #818cf8); }
+        .g7 { background: linear-gradient(150deg, #b45309, #fbbf24); }
+        .card-body { padding: 18px 20px 10px; flex: 1; }
+        /* H3 SEO */
+        .card-name {
+            font-size: 15px; font-weight: 700; line-height: 1.35;
+            display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .card-ville {
+            margin-top: 6px; font-size: 12px; color: var(--mid);
+            display: flex; align-items: center; gap: 4px;
+        }
+        .card-footer { padding: 12px 20px 18px; }
+        .btn-voir {
+            display: block; width: 100%; padding: 11px 0;
+            background: var(--dark); color: #fff;
+            border: none; border-radius: 12px;
+            font-size: 13px; font-weight: 600; font-family: inherit;
+            text-align: center; text-decoration: none; cursor: pointer;
+            transition: all .2s;
+        }
+        @media (hover: hover) {
+            .btn-voir:hover {
+                background: linear-gradient(135deg, #f97316, #ec4899);
+                box-shadow: 0 4px 16px rgba(236,72,153,.32);
+                transform: translateY(-1px);
+            }
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty {
+            text-align: center;
+            padding: 72px 24px;
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1.5px dashed var(--light);
+        }
+        .empty-icon {
+            width: 72px; height: 72px;
+            margin: 0 auto 20px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(249,115,22,.1), rgba(124,58,237,.1));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px;
+        }
+        .empty h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .empty p { font-size: 14px; color: var(--mid); max-width: 340px; margin: 0 auto 24px; line-height: 1.6; }
+
+        /* ── ITINÉRAIRE JOURS (si jours défini) ── */
+        .jours-section { margin-bottom: 56px; }
+        .jour-block {
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid rgba(0,0,0,.05);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .jour-header {
+            padding: 16px 24px;
+            background: linear-gradient(135deg, rgba(249,115,22,.06), rgba(124,58,237,.06));
+            border-bottom: 1px solid rgba(0,0,0,.05);
+            display: flex; align-items: center; gap: 14px;
+        }
+        .jour-num {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: var(--brand);
+            color: white; font-size: 14px; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        /* H3 SEO jour */
+        .jour-titre { font-size: 16px; font-weight: 700; }
+        .jour-body { padding: 20px 24px; }
+        .jour-act {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 0; border-bottom: 1px solid var(--light);
+        }
+        .jour-act:last-child { border-bottom: none; }
+        .jour-act-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: linear-gradient(135deg, rgba(249,115,22,.12), rgba(236,72,153,.12));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; flex-shrink: 0;
+        }
+        .jour-act-name { font-size: 14px; font-weight: 600; }
+        .jour-act-type { font-size: 12px; color: var(--mid); margin-top: 2px; }
+
+        /* ── CTA SECTION ── */
+        .cta-section {
+            position: relative;
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid rgba(0,0,0,.05);
+            box-shadow: var(--shadow-md);
+            padding: 52px 40px;
+            text-align: center;
+            overflow: hidden;
+        }
+        .cta-section::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: var(--brand);
+        }
+        .cta-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            background: linear-gradient(135deg, rgba(249,115,22,.08), rgba(124,58,237,.08));
+            border: 1px solid rgba(249,115,22,.2);
+            border-radius: 20px;
+            font-size: 12px; font-weight: 700; color: var(--orange);
+            margin-bottom: 16px;
+        }
+        .cta-section h2 {
+            font-size: 26px; font-weight: 900;
+            letter-spacing: -.5px; margin-bottom: 10px;
+        }
+        .cta-section p {
+            font-size: 15px; color: var(--mid);
+            line-height: 1.65; margin-bottom: 28px; max-width: 440px; margin-left: auto; margin-right: auto;
+        }
+        .btn-cta {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 14px 28px;
+            background: var(--brand);
+            color: white; border-radius: 14px;
+            font-size: 15px; font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 4px 18px rgba(249,115,22,.3);
+            transition: transform .2s, box-shadow .2s;
+        }
+        .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(249,115,22,.4); }
+
+        /* ── Boutons affiliation sur les cartes ── */
+        .card-aff {
+            padding: 10px 14px 14px;
+            display: flex; gap: 7px; flex-wrap: wrap;
+            border-top: 1px solid rgba(0,0,0,.04);
+        }
+        .btn-aff {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 6px 12px; border-radius: 8px;
+            font-size: 11px; font-weight: 700;
+            text-decoration: none; white-space: nowrap;
+            transition: transform .18s, box-shadow .18s;
+        }
+        .btn-aff:hover { transform: translateY(-2px); }
+        .btn-aff-act  {
+            background: linear-gradient(135deg, #f97316, #ec4899);
+            color: #fff; box-shadow: 0 2px 8px rgba(249,115,22,.22);
+        }
+        .btn-aff-act:hover  { box-shadow: 0 4px 14px rgba(249,115,22,.36); }
+        .btn-aff-hotel {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: #fff; box-shadow: 0 2px 8px rgba(79,70,229,.22);
+        }
+        .btn-aff-hotel:hover { box-shadow: 0 4px 14px rgba(124,58,237,.36); }
+        .aff-mention {
+            width: 100%; font-size: 10px; color: var(--mid);
+            opacity: .5; letter-spacing: .2px;
+        }
+
+        /* ── Intro texte ── */
+        .intro-block {
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid rgba(0,0,0,.05);
+            box-shadow: var(--shadow-sm);
+            padding: 28px 32px;
+            margin-bottom: 40px;
+        }
+        .intro-block p {
+            font-size: 15px; color: var(--mid);
+            line-height: 1.75; max-width: 760px;
+        }
+
+        /* ── Voir aussi — durées ── */
+        .voir-aussi {
+            margin-top: 48px; margin-bottom: 56px;
+        }
+        .voir-aussi-title {
+            font-size: 13px; font-weight: 800; color: var(--mid);
+            text-transform: uppercase; letter-spacing: .8px;
+            margin-bottom: 14px;
+        }
+        .voir-aussi-list {
+            display: flex; flex-wrap: wrap; gap: 10px;
+        }
+        .voir-aussi-link {
+            padding: 8px 18px;
+            background: var(--white);
+            border: 1.5px solid var(--light);
+            border-radius: 10px;
+            font-size: 13px; font-weight: 600;
+            text-decoration: none; color: var(--dark);
+            transition: all .15s;
+        }
+        .voir-aussi-link:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+            box-shadow: 0 2px 10px rgba(249,115,22,.12);
+        }
+        .voir-aussi-link.actif {
+            background: var(--brand);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 3px 12px rgba(249,115,22,.25);
+        }
+        .voir-aussi-link-base {
+            border-style: dashed;
+        }
+
+        /* ── FAQ SEO ── */
+        .faq-section { margin-top: 56px; }
+        .faq-item {
+            background: var(--white);
+            border-radius: 14px;
+            border: 1px solid rgba(0,0,0,.05);
+            padding: 20px 24px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+        /* H3 SEO FAQ */
+        .faq-item h3 {
+            font-size: 15px; font-weight: 700;
+            margin-bottom: 8px; color: var(--dark);
+        }
+        .faq-item p { font-size: 14px; color: var(--mid); line-height: 1.65; }
+
+        /* ── FOOTER ── */
+        footer {
+            background: var(--dark); color: rgba(255,255,255,.5);
+            text-align: center; padding: 32px 24px;
+            font-size: 13px;
+        }
+        footer a { color: rgba(255,255,255,.5); text-decoration: none; }
+        footer a:hover { color: white; }
+        .footer-logo {
+            font-size: 18px; font-weight: 900;
+            background: var(--brand);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            header { padding: 0 20px; }
+            .breadcrumb-bar { padding: 10px 20px; }
+            .hero { padding: 60px 20px 56px; }
+            .hero h1 { font-size: 30px; letter-spacing: -1px; }
+            .hero-sub { font-size: 15px; }
+            .hero-stats { gap: 16px; padding: 12px 20px; flex-wrap: wrap; justify-content: center; }
+            .page { padding: 36px 16px 72px; }
+            .section-title { font-size: 20px; }
+            .grid { grid-template-columns: 1fr; gap: 16px; }
+            .cta-section { padding: 36px 24px; }
+            .cta-section h2 { font-size: 22px; }
+            .jour-body { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+    <a class="logo" href="/">
+        <img src="/static/logo.svg" alt="GoAndTrip logo">
+        GoAndTrip
+    </a>
+    <nav class="header-nav">
+        <a class="nav-link" href="/login">Connexion</a>
+        <a class="nav-cta" href="/register">Commencer gratuitement →</a>
+    </nav>
+</header>
+
+<!-- ── BREADCRUMB (SEO + accessibilité) ── -->
+<div class="breadcrumb-bar">
+    <a href="/">Accueil</a>
+    <span>/</span>
+    {% if jours %}
+        <a href="/quoi-faire-a-{{ ville_slug }}">Que faire à {{ ville }}</a>
+        <span>/</span>
+        <strong>{{ ville }} en {{ jours }} jour{{ 's' if jours > 1 }}</strong>
+    {% else %}
+        <strong>Que faire à {{ ville }}</strong>
+    {% endif %}
+</div>
+
+<!-- ── HERO ── -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+        <div class="hero-breadcrumb">
+            📍 <a href="/">GoAndTrip</a> <span>/</span> {{ ville }}
+        </div>
+
+        <h1>
+            {% if jours %}
+                Que faire à <span class="grd">{{ ville }}</span><br>en {{ jours }} jour{{ 's' if jours > 1 }} ?
+            {% else %}
+                Que faire à <span class="grd">{{ ville }}</span> ?
+            {% endif %}
+        </h1>
+
+        <p class="hero-sub">
+            {% if jours %}
+                Un itinéraire optimisé sur {{ jours }} jour{{ 's' if jours > 1 }},
+                avec les meilleures activités sélectionnées pour vous.
+            {% else %}
+                Découvrez les meilleures activités, musées, restaurants et incontournables de {{ ville }}.
+            {% endif %}
+        </p>
+
+        <div class="hero-stats">
+            <div class="stat-item">
+                <div class="stat-num">{{ activites | length }}</div>
+                <div class="stat-label">Activité{{ 's' if activites | length != 1 }}</div>
+            </div>
+            {% if jours %}
+            <div class="stat-item">
+                <div class="stat-num">{{ jours }}</div>
+                <div class="stat-label">Jour{{ 's' if jours > 1 }}</div>
+            </div>
+            {% endif %}
+            <div class="stat-item">
+                <div class="stat-num">100%</div>
+                <div class="stat-label">Gratuit</div>
+            </div>
+        </div>
+
+        <!-- CTA IA -->
+        <div style="margin-top: 28px;">
+            <a href="/organiser?ville={{ ville_slug }}" class="btn-cta">
+                ✨ Générer mon itinéraire IA
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ── CONTENU PRINCIPAL ── -->
+<main class="page">
+
+    <!-- Texte intro (SEO + contenu) -->
+    {% if intro_text %}
+    <div class="intro-block">
+        <p>{{ intro_text }}</p>
+    </div>
+    {% endif %}
+
+    <!-- H2 : activités -->
+    <section>
+        <div class="section-header">
+            <p class="section-label">Activités recommandées</p>
+            <h2 class="section-title">
+                {% if jours %}
+                    Les activités incontournables en {{ jours }} jour{{ 's' if jours > 1 }}
+                {% else %}
+                    Les meilleures activités à {{ ville }}
+                {% endif %}
+                {% if activites %}
+                    <span class="pill">{{ activites | length }}</span>
+                {% endif %}
+            </h2>
+            <p class="section-intro">
+                {% if jours %}
+                    Voici un sélection d'activités parfaites pour un séjour de {{ jours }} jour{{ 's' if jours > 1 }} à {{ ville }}.
+                {% else %}
+                    Musées, restaurants, balades et expériences uniques — tout ce qu'il faut voir et faire à {{ ville }}.
+                {% endif %}
+            </p>
+        </div>
+
+        {% if activites %}
+        <div class="grid">
+            {% for act in activites %}
+            <article class="card">
+                <div class="card-visual">
+                    {% if act.image %}
+                        <img class="card-img" src="/static/images/{{ act.image }}" alt="{{ act.nom }} à {{ ville }}" loading="lazy">
+                    {% else %}
+                        <div class="card-placeholder g{{ loop.index0 % 8 }}">
+                            {{ act.emoji if act.emoji else '📍' }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h3 class="card-name">{{ act.nom }}</h3>
+                    <div class="card-ville">📍 {{ act.ville if act.ville else ville }}</div>
+                </div>
+                <!-- Boutons affiliation -->
+                <div class="card-aff">
+                    <a class="btn-aff btn-aff-act"
+                       href="https://www.getyourguide.com/s/?q={{ act.nom | urlencode }}"
+                       target="_blank" rel="noopener noreferrer sponsored">
+                        🎟️ Réserver
+                    </a>
+                    <a class="btn-aff btn-aff-hotel"
+                       href="https://www.booking.com/searchresults.html?ss={{ ville | urlencode }}"
+                       target="_blank" rel="noopener noreferrer sponsored">
+                        🏨 Hôtels
+                    </a>
+                    <span class="aff-mention">🔗 Liens partenaires</span>
+                </div>
+                <div class="card-footer">
+                    <a class="btn-voir" href="/register">Voir dans GoAndTrip →</a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty">
+            <div class="empty-icon">🗺️</div>
+            <h3>Soyez le premier à explorer {{ ville }}</h3>
+            <p>Aucune activité publique n'est encore disponible pour {{ ville }}. Créez votre compte et partagez vos découvertes !</p>
+            <a class="btn-cta" href="/register">Créer mon compte gratuit →</a>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- ITINÉRAIRE PAR JOURS (si jours défini + activités) -->
+    {% if jours and activites %}
+    <section class="jours-section">
+        <div class="section-header">
+            <p class="section-label">Planning suggéré</p>
+            <h2 class="section-title">Itinéraire {{ ville }} — {{ jours }} jour{{ 's' if jours > 1 }}</h2>
+            <p class="section-intro">
+                Une répartition équilibrée des activités pour profiter au maximum de votre séjour à {{ ville }}.
+            </p>
+        </div>
+
+        {% set par_jour = ((activites | length) / jours) | round(0, 'ceil') | int %}
+        {% for j in range(jours) %}
+            {% set debut = j * par_jour %}
+            {% set fin   = debut + par_jour %}
+            {% set acts_jour = activites[debut:fin] %}
+            {% if acts_jour %}
+            <div class="jour-block">
+                <div class="jour-header">
+                    <div class="jour-num">J{{ j + 1 }}</div>
+                    <h3 class="jour-titre">Jour {{ j + 1 }} à {{ ville }} — {{ acts_jour | length }} activité{{ 's' if acts_jour | length > 1 }}</h3>
+                </div>
+                <div class="jour-body">
+                    {% for act in acts_jour %}
+                    <div class="jour-act">
+                        <div class="jour-act-icon">{{ act.emoji if act.emoji else '📍' }}</div>
+                        <div>
+                            <div class="jour-act-name">{{ act.nom }}</div>
+                            {% if act.type %}
+                            <div class="jour-act-type">{{ act.type }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    <!-- Voir aussi — maillage interne entre durées -->
+    {% if durees_liens %}
+    <div class="voir-aussi">
+        <div class="voir-aussi-title">Voir aussi pour {{ ville }}</div>
+        <div class="voir-aussi-list">
+            <a href="/quoi-faire-a-{{ ville_slug }}"
+               class="voir-aussi-link voir-aussi-link-base {% if not jours %}actif{% endif %}">
+                Toutes les activités
+            </a>
+            {% for lien in durees_liens %}
+            <a href="{{ lien.url }}"
+               class="voir-aussi-link {% if lien.actif %}actif{% endif %}">
+                {{ ville }} en {{ lien.label }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- FAQ SEO -->
+    <section class="faq-section">
+        <div class="section-header">
+            <p class="section-label">Questions fréquentes</p>
+            <h2 class="section-title">FAQ — {{ ville }}</h2>
+        </div>
+
+        <div class="faq-item">
+            <h3>Que faire à {{ ville }}{% if jours %} en {{ jours }} jour{{ 's' if jours > 1 }}{% endif %} ?</h3>
+            <p>
+                {% if jours %}
+                    En {{ jours }} jour{{ 's' if jours > 1 }}, vous pouvez explorer les principaux sites touristiques de {{ ville }}.
+                    Utilisez GoAndTrip pour créer un itinéraire personnalisé et ne rien manquer.
+                {% else %}
+                    {{ ville }} offre de nombreuses activités : musées, gastronomie, balades et expériences culturelles.
+                    GoAndTrip vous aide à planifier votre visite de A à Z.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="faq-item">
+            <h3>Comment planifier son voyage à {{ ville }} ?</h3>
+            <p>
+                Créez votre compte GoAndTrip gratuitement, ajoutez vos activités souhaitées à {{ ville }},
+                puis laissez l'IA générer un planning optimisé par quartier et par durée de visite.
+            </p>
+        </div>
+
+        {% if jours %}
+        <div class="faq-item">
+            <h3>Quel budget prévoir pour {{ jours }} jour{{ 's' if jours > 1 }} à {{ ville }} ?</h3>
+            <p>
+                Le budget varie selon vos envies. GoAndTrip vous permet de comparer et sélectionner
+                les activités gratuites ou payantes à {{ ville }} pour mieux préparer votre séjour.
+            </p>
+        </div>
+        {% endif %}
+
+        <div class="faq-item">
+            <h3>GoAndTrip est-il gratuit ?</h3>
+            <p>
+                Oui, GoAndTrip est totalement gratuit. Créez un compte, ajoutez vos activités
+                et générez des itinéraires illimités avec l'aide de l'intelligence artificielle.
+            </p>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section>
+        <div class="cta-section" style="margin-top: 56px;">
+            <div class="cta-badge">✨ Gratuit — Sans carte bancaire</div>
+            <h2>Planifiez votre voyage à {{ ville }} avec l'IA</h2>
+            <p>
+                Créez votre compte GoAndTrip et générez un itinéraire personnalisé
+                {% if jours %}en {{ jours }} jour{{ 's' if jours > 1 }}{% endif %}
+                en quelques secondes.
+            </p>
+            <a class="btn-cta" href="/register">
+                Commencer gratuitement →
+            </a>
+        </div>
+    </section>
+
+</main>
+
+<!-- ── FOOTER ── -->
+<footer>
+    <div class="footer-logo">GoAndTrip</div>
+    <p>Le planificateur de voyages intelligent.</p>
+    <p style="margin-top: 8px;">
+        <a href="/">Accueil</a> &nbsp;·&nbsp;
+        <a href="/register">Créer un compte</a> &nbsp;·&nbsp;
+        <a href="/login">Connexion</a>
+    </p>
+</footer>
+
+<!-- JSON-LD FAQ structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Que faire à {{ ville }}{% if jours %} en {{ jours }} jour{{ 's' if jours > 1 }}{% endif %} ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{% if jours %}En {{ jours }} jour{{ 's' if jours > 1 }}, explorez les principaux sites de {{ ville }} avec un itinéraire optimisé par GoAndTrip.{% else %}{{ ville }} offre de nombreuses activités : musées, gastronomie, balades et expériences culturelles.{% endif %}"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Comment planifier son voyage à {{ ville }} ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Créez un compte GoAndTrip gratuitement, ajoutez vos activités et laissez l'IA générer un planning optimisé."
+      }
+    }
+  ]
+}
+</script>
+
+</body>
+</html>

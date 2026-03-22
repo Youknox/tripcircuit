@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TripCircuit</title>
+    <title>GoAndTrip — Planifiez vos voyages avec l'IA</title>
+    <meta name="description" content="Planifiez vos voyages avec l'IA. Organisez vos activités, créez des itinéraires personnalisés et partagez vos aventures avec GoAndTrip.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="GoAndTrip — Planifiez vos voyages avec l'IA">
+    <meta property="og:description" content="Planifiez vos voyages avec l'IA. Organisez vos activités et créez des itinéraires personnalisés.">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://goandtrip.fr/">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="shortcut icon" href="/static/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -61,14 +69,23 @@
         }
 
         .logo {
-            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 20px;
             font-weight: 900;
             text-decoration: none;
-            letter-spacing: -0.8px;
+            letter-spacing: -0.6px;
             background: var(--brand);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }
+        .logo img {
+            width: 34px;
+            height: 34px;
+            flex-shrink: 0;
+            display: block;
         }
 
         .header-nav { display: flex; align-items: center; gap: 6px; }
@@ -587,7 +604,10 @@
 
 <!-- ══ HEADER ══ -->
 <header>
-    <a class="logo" href="/">TripCircuit</a>
+    <a class="logo" href="/">
+        <img src="/static/logo.svg" alt="GoAndTrip logo">
+        GoAndTrip
+    </a>
     <div class="header-nav">
         <a href="/trips" class="nav-btn">✈️ Voyages</a>
         <a href="/organiser" class="nav-btn active">🗺️ Organiser</a>
@@ -601,9 +621,9 @@
 <section class="hero">
     <div class="hero-bg"></div>
     <div class="hero-content">
-        <div class="hero-badge">🌍 Votre carnet de voyage digital</div>
-        <h1>Explorez.<br><span class="grd">Sauvegardez.</span><br>Partagez.</h1>
-        <p>Retrouvez toutes vos expériences en un instant.</p>
+        <div class="hero-badge">✈️ Planificateur de voyage IA</div>
+        <h1>Planifie ton voyage<br><span class="grd">en quelques secondes</span></h1>
+        <p>Itinéraires optimisés par IA — sauvegarde tes activités, organise tes étapes et partage tes aventures.</p>
     </div>
 </section>
 

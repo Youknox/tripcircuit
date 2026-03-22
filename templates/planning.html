@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planning {{ nb_jours }} jours — TripCircuit</title>
+    <title>Planning {{ nb_jours }} jours — GoAndTrip | Itinéraire optimisé</title>
+    <meta name="description" content="Votre itinéraire de voyage sur {{ nb_jours }} jours, généré et optimisé par l'IA de GoAndTrip.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="shortcut icon" href="/static/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -50,7 +54,8 @@
             z-index: 100;
         }
 
-        .logo { font-size: 21px; font-weight: 800; color: var(--red); text-decoration: none; }
+        .logo { display: flex; align-items: center; gap: 9px; font-size: 20px; font-weight: 900; text-decoration: none; background: linear-gradient(135deg,#f97316,#ec4899 55%,#7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -0.5px; }
+        .logo img { width: 32px; height: 32px; flex-shrink: 0; display: block; }
         .logo span { color: var(--dark); }
         .back { font-size: 14px; font-weight: 500; color: var(--mid); text-decoration: none; }
         .back:hover { color: var(--dark); }
@@ -328,7 +333,10 @@
 <body>
 
 <header>
-    <a class="logo" href="/">Trip<span>Circuit</span></a>
+    <a class="logo" href="/">
+        <img src="/static/logo.svg" alt="GoAndTrip">
+        GoAndTrip
+    </a>
     <a class="back" href="/organiser">← Nouvelle recherche</a>
 </header>
 

@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription — TripCircuit</title>
+    <title>Créer un compte — GoAndTrip | Planificateur de voyages IA</title>
+    <meta name="description" content="Créez votre compte GoAndTrip gratuit et commencez à planifier vos voyages avec l'intelligence artificielle.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://goandtrip.fr/register">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="shortcut icon" href="/static/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -63,12 +68,14 @@
         }
         .panel-left-content { position: relative; z-index: 1; }
         .panel-logo {
-            font-size: 28px; font-weight: 900; letter-spacing: -1px;
+            display: flex; align-items: center; gap: 10px;
+            font-size: 24px; font-weight: 900; letter-spacing: -0.8px;
             background: var(--brand);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             background-clip: text;
-            display: block; margin-bottom: 40px; text-decoration: none;
+            margin-bottom: 40px; text-decoration: none;
         }
+        .panel-logo img { width: 38px; height: 38px; flex-shrink: 0; display: block; }
         .panel-headline {
             font-size: 38px; font-weight: 900;
             letter-spacing: -1.5px; line-height: 1.12;
@@ -184,7 +191,10 @@
     <div class="panel-left">
         <div class="panel-left-bg"></div>
         <div class="panel-left-content">
-            <a class="panel-logo" href="/">TripCircuit</a>
+            <a class="panel-logo" href="/">
+                <img src="/static/logo.svg" alt="GoAndTrip">
+                GoAndTrip
+            </a>
             <div class="panel-headline">
                 Commencez<br>votre <span class="grd">aventure</span>
             </div>
@@ -209,7 +219,10 @@
     <!-- Panneau droit -->
     <div class="panel-right">
         <div class="form-box">
-            <a href="/" style="font-size:20px;font-weight:900;text-decoration:none;background:linear-gradient(135deg,#f97316,#ec4899 55%,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block;margin-bottom:32px;">TripCircuit</a>
+            <a href="/" style="display:flex;align-items:center;gap:9px;font-size:20px;font-weight:900;text-decoration:none;background:linear-gradient(135deg,#f97316,#ec4899 55%,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:32px;">
+                <img src="/static/logo.svg" alt="GoAndTrip" style="width:34px;height:34px;flex-shrink:0;">
+                GoAndTrip
+            </a>
 
             <h1>Créer un compte</h1>
             <p class="form-subtitle">Commencez à planifier vos voyages. 🗺️</p>
