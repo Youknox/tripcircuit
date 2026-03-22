@@ -957,7 +957,9 @@ def supprimer_image(nom_fichier: str) -> None:
 
 @app.route("/")
 def index():
-    return redirect(url_for("organiser"))
+    if "user_id" in session:
+        return redirect(url_for("organiser"))
+    return redirect(url_for("login"))
 
 
 @app.route("/ajouter", methods=["POST"])
