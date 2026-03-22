@@ -4,6 +4,7 @@ requests
 beautifulsoup4
 anthropic
 pydantic
+itsdangerous
 openai>=1.0.0
 flask-limiter>=4.0.0
 authlib>=1.0.0
