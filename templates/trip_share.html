@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ trip.jours }} jours à {{ trip.ville }} — GoAndTrip</title>
+    <meta name="description" content="Découvrez cet itinéraire {{ trip.jours }} jours à {{ trip.ville }} généré par GoAndTrip.">
+    <meta property="og:title"       content="{{ trip.jours }} jours à {{ trip.ville }} — GoAndTrip">
+    <meta property="og:description" content="Itinéraire complet en {{ trip.jours }} jours à {{ trip.ville }}, transport : {{ trip.transport }}.">
+    <meta property="og:type"        content="website">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --orange: #f97316;
+            --pink:   #ec4899;
+            --violet: #7c3aed;
+            --indigo: #4f46e5;
+            --brand:  linear-gradient(135deg, #f97316 0%, #ec4899 55%, #7c3aed 100%);
+            --dark:   #111827;
+            --mid:    #6b7280;
+            --light:  #e5e7eb;
+            --bg:     #f8f9fc;
+            --white:  #ffffff;
+            --radius: 16px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.06);
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: var(--bg); color: var(--dark);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Header ── */
+        header {
+            background: rgba(255,255,255,.94);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0,0,0,.06);
+            height: 64px; padding: 0 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 200;
+        }
+        .logo {
+            display: flex; align-items: center; gap: 9px;
+            font-size: 20px; font-weight: 900; letter-spacing: -.5px;
+            text-decoration: none;
+            background: var(--brand);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .logo img { width: 32px; height: 32px; }
+        .header-cta {
+            padding: 9px 20px;
+            background: var(--brand); color: #fff;
+            border-radius: 10px; font-size: 13px; font-weight: 700;
+            text-decoration: none;
+            transition: transform .2s, box-shadow .2s;
+            box-shadow: 0 4px 12px rgba(249,115,22,.25);
+        }
+        .header-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(236,72,153,.35); }
+
+        /* ── Hero ── */
+        .hero {
+            background: linear-gradient(170deg, #0d0b1f 0%, #1a1040 45%, #0c1445 100%);
+            padding: 56px 40px 52px;
+            text-align: center;
+            position: relative; overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse 60% 50% at 20% 40%, rgba(249,115,22,.25) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 60% at 80% 60%, rgba(124,58,237,.30) 0%, transparent 55%);
+        }
+        .hero-content { position: relative; z-index: 1; }
+
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 6px 14px; border-radius: 20px;
+            background: rgba(255,255,255,.09);
+            border: 1px solid rgba(255,255,255,.14);
+            font-size: 12px; font-weight: 700; color: rgba(255,255,255,.75);
+            letter-spacing: .5px; text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+        .hero h1 {
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 900; letter-spacing: -1.5px; line-height: 1.1;
+            color: white; margin-bottom: 12px;
+        }
+        .hero h1 .grd {
+            background: linear-gradient(135deg, #fb923c, #ec4899 50%, #a78bfa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-meta {
+            display: flex; align-items: center; justify-content: center;
+            gap: 20px; flex-wrap: wrap;
+            margin-top: 16px;
+        }
+        .hero-chip {
+            display: flex; align-items: center; gap: 7px;
+            background: rgba(255,255,255,.09);
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 20px; padding: 7px 16px;
+            font-size: 13px; font-weight: 600; color: rgba(255,255,255,.80);
+        }
+
+        /* ── Share strip ── */
+        .share-strip {
+            background: var(--white);
+            border-bottom: 1px solid var(--light);
+            padding: 14px 40px;
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        }
+        .share-strip-label { font-size: 13px; font-weight: 600; color: var(--mid); }
+        .share-strip-url {
+            flex: 1; min-width: 0;
+            padding: 8px 12px;
+            border: 1.5px solid var(--light); border-radius: 8px;
+            font-size: 12px; font-family: 'Inter', monospace;
+            background: var(--bg); color: var(--dark);
+            outline: none; cursor: text;
+        }
+        .btn-copy-strip {
+            padding: 8px 18px;
+            background: var(--dark); color: #fff;
+            border: none; border-radius: 8px;
+            font-size: 13px; font-weight: 700; font-family: inherit;
+            cursor: pointer; white-space: nowrap;
+            transition: background .15s;
+        }
+        .btn-copy-strip:hover   { background: #1f2937; }
+        .btn-copy-strip.copied  { background: var(--indigo); }
+
+        /* ── Main ── */
+        .page {
+            max-width: 760px; margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        /* ── Day cards ── */
+        .days-list { display: flex; flex-direction: column; gap: 16px; }
+
+        .day-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid rgba(0,0,0,.05);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        .day-header {
+            padding: 16px 24px;
+            background: linear-gradient(135deg, rgba(249,115,22,.05), rgba(124,58,237,.05));
+            border-bottom: 1px solid rgba(0,0,0,.04);
+            display: flex; align-items: center; gap: 14px;
+        }
+        .day-num {
+            width: 40px; height: 40px; border-radius: 11px;
+            background: var(--brand);
+            color: white; font-size: 14px; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .day-title { font-size: 16px; font-weight: 700; }
+
+        .day-body { padding: 8px 0; }
+
+        .act-item {
+            display: flex; align-items: flex-start; gap: 16px;
+            padding: 14px 24px;
+            border-bottom: 1px solid rgba(0,0,0,.04);
+        }
+        .act-item:last-child { border-bottom: none; }
+
+        .act-num {
+            width: 26px; height: 26px; border-radius: 7px;
+            background: linear-gradient(135deg,rgba(249,115,22,.12),rgba(124,58,237,.12));
+            color: var(--violet); font-size: 12px; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 2px;
+        }
+        .act-body { flex: 1; min-width: 0; }
+        .act-name { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+        .act-desc { font-size: 13px; color: var(--mid); line-height: 1.55; margin-bottom: 10px; }
+
+        /* Boutons affiliation */
+        .act-links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+        .btn-aff {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 6px 13px; border-radius: 8px;
+            font-size: 12px; font-weight: 700; text-decoration: none;
+            transition: opacity .15s;
+        }
+        .btn-aff:hover { opacity: .82; }
+        .btn-aff-activity {
+            background: linear-gradient(135deg,rgba(249,115,22,.1),rgba(236,72,153,.1));
+            color: #c2410c; border: 1px solid rgba(249,115,22,.2);
+        }
+        .btn-aff-hotel {
+            background: linear-gradient(135deg,rgba(79,70,229,.08),rgba(124,58,237,.08));
+            color: var(--indigo); border: 1px solid rgba(79,70,229,.15);
+        }
+        .aff-mention { font-size: 10px; color: #bbb; margin-top: 5px; }
+
+        /* ── Map ── */
+        .map-section {
+            margin-top: 32px;
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid rgba(0,0,0,.05);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        .map-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid rgba(0,0,0,.05);
+            display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+        }
+        .map-title { font-size: 15px; font-weight: 700; }
+        .map-legend { display: flex; gap: 12px; flex-wrap: wrap; }
+        .map-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--mid); }
+        .map-legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        #map { height: 360px; }
+
+        /* ── CTA bas ── */
+        .cta-bottom {
+            margin-top: 40px;
+            background: var(--white);
+            border: 1.5px dashed var(--light);
+            border-radius: var(--radius);
+            padding: 28px 32px;
+            text-align: center;
+        }
+        .cta-bottom h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+        .cta-bottom p  { font-size: 14px; color: var(--mid); margin-bottom: 20px; line-height: 1.6; }
+        .btn-cta-bottom {
+            display: inline-block;
+            padding: 13px 28px;
+            background: var(--brand); color: #fff;
+            border-radius: 12px; font-size: 14px; font-weight: 700;
+            text-decoration: none;
+            transition: transform .2s, box-shadow .2s;
+            box-shadow: 0 4px 16px rgba(124,58,237,.3);
+        }
+        .btn-cta-bottom:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(236,72,153,.38); }
+
+        @media (max-width: 640px) {
+            header { padding: 0 16px; }
+            .hero  { padding: 40px 16px 36px; }
+            .share-strip { padding: 12px 16px; }
+            .page  { padding: 28px 14px 60px; }
+            .act-item { padding: 12px 16px; gap: 10px; }
+            .day-header { padding: 14px 16px; }
+            #map { height: 260px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+    <a class="logo" href="/">
+        <img src="/static/logo.svg" alt="GoAndTrip">
+        GoAndTrip
+    </a>
+    <a class="header-cta" href="/organiser">✨ Créer mon voyage</a>
+</header>
+
+<!-- ══ HERO ══ -->
+<div class="hero">
+    <div class="hero-content">
+        <div class="hero-badge">✈️ Itinéraire partagé</div>
+        <h1>{{ trip.jours }} jours à <span class="grd">{{ trip.ville }}</span></h1>
+        <div class="hero-meta">
+            <div class="hero-chip">📅 {{ trip.jours }} jour{% if trip.jours > 1 %}s{% endif %}</div>
+            <div class="hero-chip">🚌 {{ trip.transport }}</div>
+            <div class="hero-chip">🤖 Généré par IA</div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ BANDE PARTAGE ══ -->
+<div class="share-strip">
+    <span class="share-strip-label">🔗 Partager :</span>
+    <input class="share-strip-url" id="share-url" type="text"
+           value="{{ request.url }}" readonly>
+    <button class="btn-copy-strip" id="btn-copy">Copier le lien</button>
+</div>
+
+<!-- ══ CONTENU ══ -->
+<main class="page">
+    <div class="days-list">
+        {% for jour in trip.planning %}
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-num">J{{ jour.day }}</div>
+                <div class="day-title">{{ jour.title | default('Jour ' ~ jour.day) }}</div>
+            </div>
+            <div class="day-body">
+                {% for act in jour.activities %}
+                {% set name = act.name if act is mapping else act %}
+                <div class="act-item">
+                    <div class="act-num">{{ loop.index }}</div>
+                    <div class="act-body">
+                        <div class="act-name">{{ name }}</div>
+                        {% if act is mapping and act.description %}
+                        <div class="act-desc">{{ act.description }}</div>
+                        {% endif %}
+                        <div class="act-links">
+                            <a class="btn-aff btn-aff-activity"
+                               href="https://www.getyourguide.com/s/?q={{ name | urlencode }}"
+                               target="_blank" rel="noopener noreferrer sponsored">
+                                🎟️ Réserver l'activité
+                            </a>
+                            <a class="btn-aff btn-aff-hotel"
+                               href="https://www.booking.com/searchresults.html?ss={{ trip.ville | urlencode }}"
+                               target="_blank" rel="noopener noreferrer sponsored">
+                                🏨 Voir les hôtels
+                            </a>
+                        </div>
+                        <div class="aff-mention">🔗 Liens partenaires</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- ── Carte interactive ── -->
+    <div class="map-section" id="map-section">
+        <div class="map-header">
+            <div class="map-title">🗺️ Carte de l'itinéraire</div>
+            <div class="map-legend" id="map-legend"></div>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <!-- ── CTA ── -->
+    <div class="cta-bottom">
+        <h3>Créez votre propre itinéraire</h3>
+        <p>GoAndTrip génère des plannings personnalisés en quelques secondes grâce à l'IA.<br>Gratuit, sans engagement.</p>
+        <a class="btn-cta-bottom" href="/organiser?ville={{ trip.ville | urlencode }}">
+            ✨ Générer mon itinéraire pour {{ trip.ville }}
+        </a>
+    </div>
+</main>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ── Copier le lien ── */
+    const shareUrl = document.getElementById('share-url');
+    const btnCopy  = document.getElementById('btn-copy');
+
+    btnCopy.addEventListener('click', async function () {
+        try {
+            await navigator.clipboard.writeText(shareUrl.value);
+        } catch {
+            shareUrl.select();
+            document.execCommand('copy');
+        }
+        btnCopy.textContent = '✓ Copié !';
+        btnCopy.classList.add('copied');
+        setTimeout(() => {
+            btnCopy.textContent = 'Copier le lien';
+            btnCopy.classList.remove('copied');
+        }, 2500);
+    });
+
+    /* ════════════════════════════════════════
+       CARTE LEAFLET
+    ════════════════════════════════════════ */
+
+    const DAY_COLORS = [
+        '#f97316','#7c3aed','#4f46e5','#ec4899',
+        '#059669','#0ea5e9','#d97706',
+    ];
+    function dayColor(i) { return DAY_COLORS[i % DAY_COLORS.length]; }
+
+    function makeIcon(color, label) {
+        const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
+                <defs><filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,.3)"/></filter></defs>
+                <path d="M16 0 C7.16 0 0 7.16 0 16 C0 28 16 40 16 40 C16 40 32 28 32 16 C32 7.16 24.84 0 16 0Z"
+                      fill="${color}" filter="url(#sh)"/>
+                <text x="16" y="21" text-anchor="middle" font-size="13" font-weight="800"
+                      font-family="Inter,sans-serif" fill="white">${label}</text>
+            </svg>`;
+        return L.divIcon({
+            html: svg, className: '', iconSize: [32,40], iconAnchor: [16,40], popupAnchor: [0,-40],
+        });
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function geocode(query) {
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
+        try {
+            const r = await fetch(url, { headers: { 'Accept-Language': 'fr' } });
+            const d = await r.json();
+            if (d && d[0]) return [parseFloat(d[0].lat), parseFloat(d[0].lon)];
+        } catch {}
+        return null;
+    }
+
+    async function buildMap() {
+        const map = L.map('map');
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap',
+            maxZoom: 18,
+        }).addTo(map);
+
+        const legend = document.getElementById('map-legend');
+        const planning = {{ trip.planning | tojson }};
+        const ville    = {{ trip.ville | tojson }};
+
+        const allBounds = [];
+        const byDay = {};
+
+        for (let di = 0; di < planning.length; di++) {
+            const jour  = planning[di];
+            const color = dayColor(di);
+            byDay[di] = [];
+
+            for (let ai = 0; ai < jour.activities.length; ai++) {
+                const act  = jour.activities[ai];
+                const name = typeof act === 'string' ? act : act.name;
+                const desc = typeof act === 'object' ? (act.description || '') : '';
+                const query = `${name}, ${ville}`;
+
+                await sleep(1100);   // Nominatim rate limit
+                const coords = await geocode(query);
+                if (!coords) continue;
+
+                allBounds.push(coords);
+                byDay[di].push(coords);
+
+                const marker = L.marker(coords, { icon: makeIcon(color, ai + 1) });
+                marker.bindPopup(`
+                    <div style="font-family:Inter,sans-serif;padding:4px 0;">
+                        <div style="font-weight:700;font-size:13px;margin-bottom:3px;">${name}</div>
+                        ${desc ? `<div style="font-size:12px;color:#666">${desc}</div>` : ''}
+                        <div style="font-size:11px;color:#999;margin-top:4px;">Jour ${jour.day}</div>
+                    </div>
+                `);
+                marker.addTo(map);
+            }
+
+            if (byDay[di].length >= 2) {
+                L.polyline(byDay[di], { color, weight: 3, opacity: 0.65, dashArray: '7 5' }).addTo(map);
+            }
+        }
+
+        // Légende
+        Object.entries(byDay).forEach(([idx, pts]) => {
+            if (!pts.length) return;
+            const item = document.createElement('div');
+            item.className = 'map-legend-item';
+            item.innerHTML = `<div class="map-legend-dot" style="background:${dayColor(parseInt(idx))}"></div>Jour ${planning[idx].day}`;
+            legend.appendChild(item);
+        });
+
+        if (allBounds.length === 1) {
+            map.setView(allBounds[0], 14);
+        } else if (allBounds.length > 1) {
+            map.fitBounds(allBounds, { padding: [40, 40] });
+        } else {
+            // Aucun point géocodé — centrer sur la ville
+            const c = await geocode(ville);
+            if (c) map.setView(c, 12);
+        }
+    }
+
+    buildMap();
+})();
+</script>
+
+</body>
+</html>

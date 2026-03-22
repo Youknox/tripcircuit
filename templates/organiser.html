@@ -520,6 +520,92 @@
         }
         .btn-planning:hover { background: linear-gradient(135deg,#f97316,#ec4899); }
 
+        /* ══ SAVE / SHARE BAR ══ */
+        .save-bar {
+            margin-top: 32px;
+            background: var(--white);
+            border: 1.5px solid rgba(124,58,237,.15);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px; flex-wrap: wrap;
+            box-shadow: var(--shadow-sm);
+        }
+        .save-bar-left { display: flex; align-items: center; gap: 14px; }
+        .save-bar-icon { font-size: 28px; flex-shrink: 0; }
+        .save-bar-title { font-size: 15px; font-weight: 700; color: var(--dark); }
+        .save-bar-sub   { font-size: 13px; color: var(--mid); margin-top: 2px; }
+
+        .btn-save {
+            padding: 11px 22px;
+            background: var(--brand); color: #fff;
+            border: none; border-radius: 11px;
+            font-size: 14px; font-weight: 700; font-family: inherit;
+            cursor: pointer; white-space: nowrap;
+            transition: transform .2s, box-shadow .2s;
+            box-shadow: 0 4px 14px rgba(124,58,237,.28);
+        }
+        .btn-save:hover  { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(236,72,153,.38); }
+        .btn-save:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+        .share-panel {
+            display: none;
+            margin-top: 16px;
+            background: linear-gradient(135deg, rgba(34,197,94,.05), rgba(124,58,237,.05));
+            border: 1.5px solid rgba(34,197,94,.25);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            animation: fadeIn .3s ease both;
+        }
+        .share-panel-header {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+        }
+        .share-check  { font-size: 26px; flex-shrink: 0; }
+        .share-title  { font-size: 15px; font-weight: 800; color: #166534; }
+        .share-sub    { font-size: 13px; color: #4b7a5a; margin-top: 2px; }
+
+        .share-url-row {
+            display: flex; gap: 8px; flex-wrap: wrap;
+        }
+        .share-url-input {
+            flex: 1; min-width: 0;
+            padding: 10px 14px;
+            border: 1.5px solid rgba(34,197,94,.3);
+            border-radius: 10px;
+            font-size: 13px; font-family: 'Inter', monospace;
+            color: var(--dark); background: rgba(255,255,255,.85);
+            outline: none; cursor: text;
+        }
+        .btn-copy {
+            padding: 10px 18px;
+            background: #166534; color: #fff;
+            border: none; border-radius: 10px;
+            font-size: 13px; font-weight: 700; font-family: inherit;
+            cursor: pointer; white-space: nowrap;
+            transition: background .15s;
+        }
+        .btn-copy:hover { background: #15803d; }
+        .btn-copy.copied { background: #4f46e5; }
+
+        .btn-open {
+            padding: 10px 18px;
+            background: transparent; color: var(--violet);
+            border: 1.5px solid rgba(124,58,237,.25);
+            border-radius: 10px;
+            font-size: 13px; font-weight: 700;
+            text-decoration: none; white-space: nowrap;
+            transition: all .15s;
+        }
+        .btn-open:hover { background: rgba(124,58,237,.07); }
+
+        .copy-toast {
+            display: none;
+            margin-top: 10px;
+            font-size: 12px; font-weight: 700;
+            color: #166534;
+            animation: fadeIn .2s ease both;
+        }
+
         /* ══ RESPONSIVE ══ */
         @media (max-width: 640px) {
             header { padding: 0 16px; }
@@ -534,6 +620,10 @@
             .planning-link { flex-direction: column; align-items: flex-start; }
             .btn-planning { width: 100%; text-align: center; padding: 12px; }
             #map, .map-loading { height: 280px; }
+            .save-bar { flex-direction: column; align-items: flex-start; }
+            .btn-save { width: 100%; text-align: center; padding: 13px; }
+            .share-url-row { flex-direction: column; }
+            .btn-copy, .btn-open { width: 100%; text-align: center; }
         }
     </style>
 </head>
@@ -675,6 +765,39 @@
             </div>
         </div>
 
+        <!-- ── Barre sauvegarde / partage ── -->
+        <div class="save-bar" id="save-bar">
+            <div class="save-bar-left">
+                <span class="save-bar-icon">✈️</span>
+                <div>
+                    <div class="save-bar-title">Sauvegarder ce voyage</div>
+                    <div class="save-bar-sub">Obtenez un lien de partage permanent</div>
+                </div>
+            </div>
+            <div class="save-bar-actions">
+                <button class="btn-save" id="btn-save" type="button">
+                    <span id="btn-save-text">💾 Sauvegarder</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ── Panel de partage (affiché après sauvegarde) ── -->
+        <div class="share-panel" id="share-panel">
+            <div class="share-panel-header">
+                <span class="share-check">✅</span>
+                <div>
+                    <div class="share-title">Voyage sauvegardé !</div>
+                    <div class="share-sub">Partagez ce lien — accessible sans connexion</div>
+                </div>
+            </div>
+            <div class="share-url-row">
+                <input class="share-url-input" id="share-url-input" type="text" readonly>
+                <button class="btn-copy" id="btn-copy" type="button">Copier</button>
+                <a class="btn-open" id="btn-open" href="#" target="_blank" rel="noopener">Ouvrir →</a>
+            </div>
+            <div class="copy-toast" id="copy-toast">✓ Lien copié !</div>
+        </div>
+
         <!-- Lien vers planning existant depuis activités enregistrées -->
         <div class="planning-link">
             <div class="planning-link-text">
@@ -707,6 +830,14 @@
     const metaVille      = document.getElementById('meta-ville');
     const metaTransport  = document.getElementById('meta-transport');
     const formCard       = document.getElementById('form-card');
+    const btnSave        = document.getElementById('btn-save');
+    const btnSaveText    = document.getElementById('btn-save-text');
+    const saveBar        = document.getElementById('save-bar');
+    const sharePanel     = document.getElementById('share-panel');
+    const shareUrlInput  = document.getElementById('share-url-input');
+    const btnCopy        = document.getElementById('btn-copy');
+    const btnOpen        = document.getElementById('btn-open');
+    const copyToast      = document.getElementById('copy-toast');
 
     /* ── Pré-remplissage depuis ?ville= (liens SEO → organiser) ── */
     (function () {
@@ -801,6 +932,7 @@
         /* Affichage */
         formCard.style.display = 'none';
         result.style.display   = 'block';
+        resetSaveBar();
         result.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         /* Lancement de la carte en arrière-plan */
@@ -1005,6 +1137,89 @@
         });
     }
 
+    /* ── État courant (planning affiché) ── */
+    let _lastTrip   = null;   // { trip: [...], meta: {...} }
+    let _lastParams = null;   // { ville, jours, transport }
+
+    /* ══════════════════════════════════════════
+       SAUVEGARDE & PARTAGE
+    ══════════════════════════════════════════ */
+
+    function resetSaveBar() {
+        saveBar.style.display   = 'flex';
+        sharePanel.style.display = 'none';
+        btnSaveText.textContent  = '💾 Sauvegarder';
+        btnSave.disabled         = false;
+        btnCopy.textContent      = 'Copier';
+        btnCopy.classList.remove('copied');
+        copyToast.style.display  = 'none';
+    }
+
+    async function sauvegarder() {
+        if (!_lastTrip || !_lastParams) return;
+
+        btnSave.disabled        = true;
+        btnSaveText.textContent = 'Sauvegarde…';
+
+        try {
+            const res = await fetch('/api/save-trip', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ville:     _lastParams.ville,
+                    jours:     _lastTrip.meta?.jours ?? _lastTrip.trip.length,
+                    transport: _lastParams.transport,
+                    planning:  _lastTrip.trip,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                btnSaveText.textContent = '⚠️ ' + (data.error || 'Erreur');
+                btnSave.disabled = false;
+                return;
+            }
+
+            // Afficher le panel de partage
+            shareUrlInput.value  = data.share_url;
+            btnOpen.href         = data.share_url;
+            saveBar.style.display   = 'none';
+            sharePanel.style.display = 'block';
+            sharePanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        } catch (err) {
+            btnSaveText.textContent = '⚠️ Erreur réseau';
+            btnSave.disabled = false;
+        }
+    }
+
+    async function copierLien() {
+        const url = shareUrlInput.value;
+        if (!url) return;
+
+        try {
+            await navigator.clipboard.writeText(url);
+        } catch {
+            // Fallback pour navigateurs sans Clipboard API
+            shareUrlInput.select();
+            document.execCommand('copy');
+        }
+
+        btnCopy.textContent = '✓ Copié !';
+        btnCopy.classList.add('copied');
+        copyToast.style.display = 'block';
+
+        setTimeout(() => {
+            btnCopy.textContent = 'Copier';
+            btnCopy.classList.remove('copied');
+            copyToast.style.display = 'none';
+        }, 2500);
+    }
+
+    btnSave.addEventListener('click', sauvegarder);
+    btnCopy.addEventListener('click', copierLien);
+
     /* ── Appel API ── */
     async function generer() {
         const params = valider();
@@ -1032,6 +1247,8 @@
                 return;
             }
 
+            _lastTrip   = data;
+            _lastParams = params;
             showResult(data, params);
 
         } catch (err) {
@@ -1045,6 +1262,8 @@
     function reset() {
         result.style.display   = 'none';
         formCard.style.display = 'block';
+        _lastTrip   = null;
+        _lastParams = null;
         formCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 

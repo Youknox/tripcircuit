@@ -1244,6 +1244,124 @@ def supprimer_trip(trip_id: int):
     return redirect("/trips")
 
 
+# ══════════════════════════════════════════════════════════
+#  SAUVEGARDE & PARTAGE DES PLANNINGS IA
+# ══════════════════════════════════════════════════════════
+
+# Stockage séparé des plannings générés par IA (ne touche pas aux trips manuels)
+
+def _fichier_ai_trips(user_id: int) -> str:
+    return f"ai_trips_{user_id}.json"
+
+
+def _charger_ai_trips(user_id: int) -> list:
+    path = _fichier_ai_trips(user_id)
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
+def _sauvegarder_ai_trips(trips: list, user_id: int) -> None:
+    with open(_fichier_ai_trips(user_id), "w", encoding="utf-8") as f:
+        json.dump(trips, f, indent=2, ensure_ascii=False)
+
+
+def _trouver_ai_trip(share_id: str) -> dict | None:
+    """Cherche un planning IA par share_id dans tous les fichiers ai_trips_*.json."""
+    for path in glob.glob("ai_trips_*.json"):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                trips = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            continue
+        for t in trips:
+            if t.get("share_id") == share_id:
+                return t
+    return None
+
+
+@app.route("/api/save-trip", methods=["POST"])
+@login_required
+@limiter.limit("20 per hour")
+def api_save_trip():
+    """
+    POST /api/save-trip
+    Body JSON : { "ville", "jours", "transport", "planning": [...] }
+    Réponse   : { "share_id": "...", "share_url": "..." }
+    """
+    user_id = session["user_id"]
+    data    = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({"error": "Corps JSON manquant."}), 400
+
+    ville    = sanitize_ville(str(data.get("ville", "")))
+    planning = data.get("planning")
+    jours    = data.get("jours")
+    transport = sanitize_transport(str(data.get("transport", "")))
+
+    if not ville:
+        return jsonify({"error": "Champ 'ville' invalide."}), 400
+    if transport is None:
+        return jsonify({"error": "Champ 'transport' invalide."}), 400
+    if not isinstance(planning, list) or len(planning) == 0:
+        return jsonify({"error": "Planning vide ou invalide."}), 400
+    try:
+        jours = int(jours)
+        if not (1 <= jours <= 30):
+            raise ValueError
+    except (TypeError, ValueError):
+        return jsonify({"error": "Champ 'jours' invalide."}), 400
+
+    # Limite à 30 voyages sauvegardés par utilisateur (anti-abus)
+    ai_trips = _charger_ai_trips(user_id)
+    if len(ai_trips) >= 30:
+        ai_trips = ai_trips[-29:]   # garde les 29 plus récents, libère une place
+
+    share_id = uuid.uuid4().hex          # ex : "4a7f2bc1e3d09812..."
+    base_url = os.getenv("BASE_URL", "http://localhost:5000")
+
+    record = {
+        "share_id":   share_id,
+        "user_id":    user_id,
+        "ville":      ville,
+        "jours":      jours,
+        "transport":  transport,
+        "planning":   planning,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    ai_trips.append(record)
+    _sauvegarder_ai_trips(ai_trips, user_id)
+
+    api_logger.info(
+        "trip_saved user=%s share_id=%s ville=%s jours=%s",
+        user_id, share_id, ville, jours,
+    )
+
+    return jsonify({
+        "share_id":  share_id,
+        "share_url": f"{base_url}/share/{share_id}",
+    }), 201
+
+
+@app.route("/share/<share_id>")
+def trip_share(share_id: str):
+    """Vue publique d'un planning IA — accessible sans compte."""
+    # Validation légère du share_id (32 hex chars)
+    if not re.fullmatch(r"[0-9a-f]{32}", share_id):
+        abort(404)
+
+    trip = _trouver_ai_trip(share_id)
+    if trip is None:
+        abort(404)
+
+    return render_template("trip_share.html", trip=trip)
+
+
 # ── Authentification ─────────────────────────────────────
 
 @app.route("/login", methods=["GET", "POST"])
