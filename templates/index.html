@@ -188,9 +188,62 @@
         .hero p {
             font-size: 16px;
             color: rgba(255,255,255,.55);
-            max-width: 380px;
+            max-width: 420px;
             margin: 0 auto;
             line-height: 1.65;
+        }
+        .hero-disclaimer {
+            display: inline-flex; align-items: center; gap: 7px;
+            margin: 14px auto 0;
+            padding: 8px 16px;
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 10px;
+            font-size: 13px; font-weight: 500;
+            color: rgba(255,255,255,.45);
+        }
+        .hero-disclaimer span { color: rgba(255,255,255,.70); font-weight: 600; }
+
+        /* ── Exemple planning ─────────────────── */
+        .hero-preview {
+            margin: 32px auto 0;
+            max-width: 480px;
+            background: rgba(255,255,255,.07);
+            border: 1px solid rgba(255,255,255,.14);
+            border-radius: 18px;
+            padding: 18px 20px;
+            backdrop-filter: blur(12px);
+            text-align: left;
+        }
+        .preview-title {
+            font-size: 11px; font-weight: 700; letter-spacing: .08em;
+            text-transform: uppercase; color: rgba(255,255,255,.40);
+            margin-bottom: 12px;
+        }
+        .preview-days { display: flex; flex-direction: column; gap: 8px; }
+        .preview-day {
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+        .preview-day-num {
+            flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800; color: #fff;
+        }
+        .d1 { background: linear-gradient(135deg,#f97316,#ec4899); }
+        .d2 { background: linear-gradient(135deg,#7c3aed,#4f46e5); }
+        .d3 { background: linear-gradient(135deg,#059669,#0ea5e9); }
+        .preview-day-content { flex: 1; }
+        .preview-day-label {
+            font-size: 12px; font-weight: 700; color: rgba(255,255,255,.80);
+            margin-bottom: 4px;
+        }
+        .preview-acts {
+            display: flex; flex-wrap: wrap; gap: 5px;
+        }
+        .preview-act {
+            font-size: 11px; padding: 3px 9px; border-radius: 6px;
+            background: rgba(255,255,255,.10); color: rgba(255,255,255,.60);
+            white-space: nowrap;
         }
         .hero-cta {
             display: flex; gap: 12px; justify-content: center;
@@ -715,9 +768,57 @@
 <section class="hero">
     <div class="hero-bg"></div>
     <div class="hero-content">
-        <div class="hero-badge">✈️ Planificateur de voyage IA</div>
-        <h1>Planifie ton voyage<br><span class="grd">en quelques secondes</span></h1>
-        <p>Itinéraires optimisés par IA — sauvegarde tes activités, organise tes étapes et partage tes aventures.</p>
+        <div class="hero-badge">🗺️ Planificateur d'itinéraire IA — gratuit</div>
+
+        <h1>Crée ton itinéraire<br><span class="grd">jour par jour en 30 sec</span></h1>
+
+        <p>Activités, visites et parcours optimisés par IA.<br>
+        Dis-nous ta destination et ta durée — on s'occupe du reste.</p>
+
+        <div class="hero-disclaimer">
+            🚫 <span>Pas pour réserver un vol</span> — pour organiser ton séjour sur place
+        </div>
+
+        <!-- Exemple visuel de planning -->
+        <div class="hero-preview">
+            <div class="preview-title">✦ Exemple — Barcelone, 3 jours</div>
+            <div class="preview-days">
+                <div class="preview-day">
+                    <div class="preview-day-num d1">J1</div>
+                    <div class="preview-day-content">
+                        <div class="preview-day-label">Arrivée &amp; Gaudí</div>
+                        <div class="preview-acts">
+                            <span class="preview-act">🏛️ Sagrada Família</span>
+                            <span class="preview-act">🌿 Park Güell</span>
+                            <span class="preview-act">🍷 La Barceloneta</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-day">
+                    <div class="preview-day-num d2">J2</div>
+                    <div class="preview-day-content">
+                        <div class="preview-day-label">Quartiers &amp; Culture</div>
+                        <div class="preview-acts">
+                            <span class="preview-act">🎨 MACBA</span>
+                            <span class="preview-act">🛍️ Las Ramblas</span>
+                            <span class="preview-act">🏰 Barri Gòtic</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-day">
+                    <div class="preview-day-num d3">J3</div>
+                    <div class="preview-day-content">
+                        <div class="preview-day-label">Détente &amp; Départ</div>
+                        <div class="preview-acts">
+                            <span class="preview-act">🏖️ Plage de Bogatell</span>
+                            <span class="preview-act">🍜 El Born</span>
+                            <span class="preview-act">🛒 Marché de la Boqueria</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {% if not email %}
         <div class="hero-cta">
             <a href="/organiser" class="btn-cta-hero">✨ Créer mon itinéraire</a>
