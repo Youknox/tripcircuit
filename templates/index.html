@@ -562,6 +562,77 @@
             .btn-del:hover { border-color: var(--orange); background: rgba(249,115,22,.06); }
         }
 
+        /* ── Bouton "Ajouter à un voyage" ────── */
+        .btn-trip {
+            width: 42px; height: 42px;
+            background: #f0fdf4; border: 1.5px solid #bbf7d0;
+            border-radius: 12px; font-size: 15px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .15s; flex-shrink: 0;
+        }
+        @media (hover: hover) {
+            .btn-trip:hover { border-color: #22c55e; background: rgba(34,197,94,.10); }
+        }
+        .trip-tag { font-size: 11px; color: #7c3aed; font-weight: 600; margin-top: 4px; }
+
+        /* ── Modal voyage ─────────────────────── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
+            z-index: 1000; align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: #fff; border-radius: 20px; padding: 28px;
+            width: min(460px, 95vw); max-height: 80vh; overflow-y: auto;
+            box-shadow: 0 24px 64px rgba(0,0,0,.22);
+            animation: popIn .18s ease;
+        }
+        @keyframes popIn { from { opacity:0; transform: scale(.94) translateY(8px); } to { opacity:1; transform: none; } }
+        .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 18px; }
+        .modal-section { font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .06em; color: #6b7280; margin: 16px 0 8px; }
+        .trip-option {
+            display: flex; align-items: center; gap: 10px;
+            padding: 11px 14px; border-radius: 12px; cursor: pointer;
+            border: 1.5px solid #e5e7eb; margin-bottom: 6px;
+            transition: all .12s;
+        }
+        .trip-option:hover  { border-color: #7c3aed; background: rgba(124,58,237,.04); }
+        .trip-option.selected { border-color: #7c3aed; background: rgba(124,58,237,.07); }
+        .trip-option input[type=radio] { accent-color: #7c3aed; width: 16px; height: 16px; flex-shrink: 0; }
+        .trip-option-label { font-size: 14px; font-weight: 600; }
+        .trip-option-meta { font-size: 12px; color: #6b7280; }
+        .new-trip-fields {
+            display: none; background: #f8f9fc; border-radius: 12px;
+            padding: 14px; margin-top: 6px; border: 1.5px solid #e5e7eb;
+        }
+        .new-trip-fields.visible { display: block; }
+        .modal input, .modal select {
+            width: 100%; padding: 10px 13px; border-radius: 10px;
+            border: 1.5px solid #e5e7eb; font-size: 14px; font-family: inherit;
+            outline: none; transition: border-color .15s; margin-bottom: 8px;
+        }
+        .modal input:focus, .modal select:focus { border-color: #7c3aed; }
+        .modal-row { display: flex; gap: 8px; }
+        .modal-row input { flex: 1; margin-bottom: 0; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-confirm {
+            flex: 1; padding: 12px; background: linear-gradient(135deg,#f97316,#7c3aed);
+            color: #fff; border: none; border-radius: 12px; font-size: 15px;
+            font-weight: 700; cursor: pointer; font-family: inherit;
+            transition: opacity .15s;
+        }
+        .btn-confirm:hover { opacity: .88; }
+        .btn-cancel {
+            padding: 12px 18px; background: #f3f4f6; border: none;
+            border-radius: 12px; font-size: 14px; font-weight: 600;
+            cursor: pointer; font-family: inherit; color: #374151;
+        }
+        .modal-feedback { font-size: 13px; font-weight: 600; margin-top: 12px; text-align: center; }
+        .modal-feedback.ok  { color: #22c55e; }
+        .modal-feedback.err { color: #ef4444; }
+
         /* ═══════════════════════════════════════
            ÉTAT VIDE
         ═══════════════════════════════════════ */
@@ -770,6 +841,8 @@
                 </div>
                 <div class="card-footer">
                     <a href="{{ a.lien }}" target="_blank" rel="noopener" class="btn-open">Ouvrir →</a>
+                    <button class="btn-trip" title="Ajouter à un voyage"
+                            onclick="openTripModal({{ a.id }})">📅</button>
                     <form action="/supprimer/{{ a.id }}" method="post">
                         <button type="submit" class="btn-del" title="Supprimer">🗑️</button>
                     </form>
@@ -806,6 +879,8 @@
                 </div>
                 <div class="card-footer">
                     <a href="{{ a.lien }}" target="_blank" rel="noopener" class="btn-open">Ouvrir →</a>
+                    <button class="btn-trip" title="Ajouter à un voyage"
+                            onclick="openTripModal({{ a.id }})">📅</button>
                     <form action="/supprimer/{{ a.id }}" method="post">
                         <button type="submit" class="btn-del" title="Supprimer">🗑️</button>
                     </form>
@@ -825,6 +900,65 @@
     {% endif %}
 
 </main>
+
+<!-- ══ MODAL : Ajouter à un voyage ══ -->
+<div class="modal-overlay" id="tripModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title">📅 Ajouter à un voyage</div>
+
+    <!-- Voyages existants -->
+    <div class="modal-section">Choisir un voyage</div>
+    <div id="tripList">
+      {% for t in trips %}
+      <label class="trip-option" onclick="selectTrip(this)">
+        <input type="radio" name="trip_choice" value="{{ t.id }}"
+               data-jours="{{ t.jours or 0 }}">
+        <div>
+          <div class="trip-option-label">✈️ {{ t.nom }}</div>
+          {% if t.ville or t.jours %}
+          <div class="trip-option-meta">
+            {% if t.ville %}{{ t.ville }}{% endif %}
+            {% if t.jours %} · {{ t.jours }} jour{{ 's' if t.jours > 1 }}{% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </label>
+      {% endfor %}
+
+      <!-- Option : nouveau voyage -->
+      <label class="trip-option" onclick="selectTrip(this, true)">
+        <input type="radio" name="trip_choice" value="new">
+        <div>
+          <div class="trip-option-label">➕ Créer un nouveau voyage</div>
+        </div>
+      </label>
+    </div>
+
+    <!-- Formulaire nouveau voyage (caché par défaut) -->
+    <div class="new-trip-fields" id="newTripFields">
+      <input type="text" id="newTripNom"   placeholder="Nom du voyage (ex: Barcelone 2025)" />
+      <div class="modal-row">
+        <input type="text"   id="newTripVille" placeholder="Ville (ex: Barcelone)" />
+        <input type="number" id="newTripJours" placeholder="Jours" min="1" max="30" />
+      </div>
+    </div>
+
+    <!-- Sélecteur de jour -->
+    <div class="modal-section">Jour dans le voyage</div>
+    <div class="modal-row" style="align-items:center; gap:12px; margin-bottom:4px;">
+      <input type="number" id="jourInput" value="1" min="1" max="30"
+             style="width:90px; flex:none;" />
+      <span id="jourLabel" style="font-size:13px; color:#6b7280;">Jour 1 du voyage</span>
+    </div>
+
+    <div id="modalFeedback" class="modal-feedback"></div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn-confirm" onclick="confirmAddToTrip()">Ajouter au voyage →</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -853,6 +987,130 @@
     });
 
     if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+</script>
+
+<script>
+// ── Modal "Ajouter à un voyage" ──────────────────────────────────────
+let _currentActId = null;
+
+function openTripModal(actId) {
+    _currentActId = actId;
+    document.getElementById('modalFeedback').textContent = '';
+    // Désélectionner tous les radios
+    document.querySelectorAll('#tripList input[type=radio]').forEach(r => {
+        r.checked = false;
+        r.closest('.trip-option').classList.remove('selected');
+    });
+    document.getElementById('newTripFields').classList.remove('visible');
+    document.getElementById('jourInput').value = 1;
+    document.getElementById('jourLabel').textContent = 'Jour 1 du voyage';
+    document.getElementById('tripModal').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('tripModal').classList.remove('open');
+    _currentActId = null;
+}
+
+function selectTrip(label, isNew = false) {
+    document.querySelectorAll('.trip-option').forEach(l => l.classList.remove('selected'));
+    label.classList.add('selected');
+    document.getElementById('newTripFields').classList.toggle('visible', isNew);
+    if (!isNew) {
+        const radio = label.querySelector('input[type=radio]');
+        const maxJours = parseInt(radio.dataset.jours) || 0;
+        if (maxJours > 0) {
+            document.getElementById('jourInput').max = maxJours;
+            document.getElementById('jourLabel').textContent =
+                `Jour 1 à ${maxJours} (durée du voyage)`;
+        } else {
+            document.getElementById('jourInput').removeAttribute('max');
+            document.getElementById('jourLabel').textContent = 'Jour 1 du voyage';
+        }
+    }
+}
+
+// Mettre à jour le label quand on change le numéro de jour
+document.getElementById('jourInput').addEventListener('input', function() {
+    const v = parseInt(this.value) || 1;
+    document.getElementById('jourLabel').textContent = `Jour ${v} du voyage`;
+});
+
+async function confirmAddToTrip() {
+    if (!_currentActId) return;
+
+    const feedback = document.getElementById('modalFeedback');
+    const selected = document.querySelector('#tripList input[type=radio]:checked');
+    if (!selected) {
+        feedback.textContent = 'Choisissez un voyage.';
+        feedback.className = 'modal-feedback err';
+        return;
+    }
+
+    const jour = Math.max(1, parseInt(document.getElementById('jourInput').value) || 1);
+    let trip_id;
+
+    // ── Cas 1 : nouveau voyage à créer ──────────────────────────────
+    if (selected.value === 'new') {
+        const nom   = document.getElementById('newTripNom').value.trim();
+        const ville = document.getElementById('newTripVille').value.trim();
+        const jours = parseInt(document.getElementById('newTripJours').value) || 0;
+        if (!nom) {
+            feedback.textContent = 'Donnez un nom au voyage.';
+            feedback.className = 'modal-feedback err';
+            return;
+        }
+        try {
+            const r = await fetch('/api/create-trip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nom, ville, jours })
+            });
+            const d = await r.json();
+            if (!r.ok) throw new Error(d.error || 'Erreur création voyage');
+            trip_id = d.trip_id;
+        } catch (e) {
+            feedback.textContent = e.message;
+            feedback.className = 'modal-feedback err';
+            return;
+        }
+    } else {
+        trip_id = parseInt(selected.value);
+    }
+
+    // ── Cas 2 : ajouter l'activité au voyage ───────────────────────
+    try {
+        const r = await fetch('/api/add-activity-to-trip', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ activity_id: _currentActId, trip_id, jour })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Erreur');
+
+        // Mettre à jour le tag sur la carte sans recharger la page
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+            const delBtn = card.querySelector(`form[action="/supprimer/${_currentActId}"]`);
+            if (delBtn) {
+                let tag = card.querySelector('.trip-tag');
+                if (!tag) {
+                    tag = document.createElement('div');
+                    tag.className = 'trip-tag';
+                    card.querySelector('.card-body').appendChild(tag);
+                }
+                tag.textContent = `✈️ ${d.trip_nom} — Jour ${d.jour}`;
+            }
+        });
+
+        feedback.textContent = `✅ Ajouté à "${d.trip_nom}", jour ${d.jour}`;
+        feedback.className = 'modal-feedback ok';
+        setTimeout(closeModal, 1200);
+    } catch (e) {
+        feedback.textContent = e.message;
+        feedback.className = 'modal-feedback err';
+    }
+}
 </script>
 </body>
 </html>

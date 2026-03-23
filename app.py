@@ -1108,16 +1108,95 @@ def trips():
 @app.route("/trips/creer", methods=["POST"])
 @login_required
 def creer_trip():
-    uid  = session["user_id"]
-    nom  = request.form.get("nom", "").strip()
+    uid   = session["user_id"]
+    nom   = request.form.get("nom", "").strip()
+    ville = request.form.get("ville", "").strip()
+    try:
+        jours = max(0, min(int(request.form.get("jours", 0) or 0), 30))
+    except (ValueError, TypeError):
+        jours = 0
+
     if not nom:
         return redirect("/trips")
 
-    trips = charger_trips(uid)
+    trips  = charger_trips(uid)
     new_id = prochain_trip_id(trips)
-    trips.append({"id": new_id, "nom": nom, "collaborateurs": [], "slug": uuid.uuid4().hex[:8]})
+    trips.append({
+        "id":             new_id,
+        "nom":            nom,
+        "ville":          ville,
+        "jours":          jours,
+        "collaborateurs": [],
+        "slug":           uuid.uuid4().hex[:8],
+    })
     sauvegarder_trips(trips, uid)
     return redirect("/trips")
+
+
+@app.route("/api/create-trip", methods=["POST"])
+@login_required
+def api_create_trip():
+    """Crée un voyage depuis le frontend (JSON). Retourne {trip_id, nom}."""
+    uid  = session["user_id"]
+    data = request.get_json(silent=True) or {}
+    nom  = str(data.get("nom", "")).strip()
+    if not nom:
+        return jsonify({"error": "Nom du voyage requis."}), 400
+
+    ville = str(data.get("ville", "")).strip()
+    try:
+        jours = max(0, min(int(data.get("jours", 0) or 0), 30))
+    except (TypeError, ValueError):
+        jours = 0
+
+    trips  = charger_trips(uid)
+    new_id = prochain_trip_id(trips)
+    trips.append({
+        "id":             new_id,
+        "nom":            nom,
+        "ville":          ville,
+        "jours":          jours,
+        "collaborateurs": [],
+        "slug":           uuid.uuid4().hex[:8],
+    })
+    sauvegarder_trips(trips, uid)
+    return jsonify({"trip_id": new_id, "nom": nom})
+
+
+@app.route("/api/add-activity-to-trip", methods=["POST"])
+@login_required
+def api_add_activity_to_trip():
+    """
+    POST /api/add-activity-to-trip
+    Body JSON : { "activity_id": int, "trip_id": int, "jour": int }
+    Retourne  : { "ok": true, "trip_nom": str, "jour": int }
+    """
+    uid  = session["user_id"]
+    data = request.get_json(silent=True) or {}
+    try:
+        act_id  = int(data["activity_id"])
+        trip_id = int(data["trip_id"])
+        jour    = max(1, int(data.get("jour", 1) or 1))
+    except (KeyError, TypeError, ValueError):
+        return jsonify({"error": "Paramètres invalides."}), 400
+
+    # Vérifier que le trip appartient bien à cet utilisateur
+    trips = charger_trips(uid)
+    trip  = next((t for t in trips if t["id"] == trip_id), None)
+    if not trip:
+        return jsonify({"error": "Voyage introuvable."}), 404
+
+    # Mettre à jour l'activité
+    activites = charger(uid)
+    act = next((a for a in activites if a["id"] == act_id), None)
+    if not act:
+        return jsonify({"error": "Activité introuvable."}), 404
+
+    act["trip_id"] = trip_id
+    act["jour"]    = jour
+    sauvegarder(activites, uid)
+
+    return jsonify({"ok": True, "trip_nom": trip["nom"], "jour": jour})
 
 
 @app.route("/trips/<int:trip_id>/partager", methods=["POST"])
