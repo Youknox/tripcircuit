@@ -248,32 +248,35 @@ def _get_openai_client() -> openai.OpenAI:
 DATA_DIR   = "data"
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 
-# Créer le dossier data/ au démarrage
-os.makedirs(DATA_DIR, exist_ok=True)
+# Créer le dossier data/ au démarrage (silencieux si déjà existant)
+try:
+    os.makedirs(DATA_DIR, exist_ok=True)
+except OSError:
+    pass
 
 
 def _migrer_fichiers_legacy() -> None:
     """
-    Migration unique : déplace les anciens fichiers de la racine vers data/.
-    Exécuté une seule fois au démarrage si les anciens fichiers existent encore.
+    Migration unique : copie les anciens fichiers de la racine vers data/.
+    Robuste : jamais fatal — toute erreur est juste loggée.
     """
     import shutil
-    patterns = [
-        ("users.json",       USERS_FILE),
-        ("data.json",        os.path.join(DATA_DIR, "data.json")),
-    ]
-    # Fichiers par utilisateur : data_<n>.json, trips_<n>.json, ai_trips_<n>.json
-    for pattern in ("data_*.json", "trips_*.json", "ai_trips_*.json"):
-        for old_path in glob.glob(pattern):
-            new_path = os.path.join(DATA_DIR, old_path)
-            if not os.path.exists(new_path):
-                shutil.move(old_path, new_path)
-                app.logger.info("migration: %s → %s", old_path, new_path)
-    # users.json à la racine
-    for old_path, new_path in patterns:
-        if os.path.exists(old_path) and not os.path.exists(new_path):
-            shutil.move(old_path, new_path)
-            app.logger.info("migration: %s → %s", old_path, new_path)
+    candidates = (
+        ["users.json", "data.json"]
+        + glob.glob("data_*.json")
+        + glob.glob("trips_*.json")
+        + glob.glob("ai_trips_*.json")
+    )
+    for old_path in candidates:
+        new_path = os.path.join(DATA_DIR, os.path.basename(old_path))
+        try:
+            if os.path.isfile(old_path) and not os.path.exists(new_path):
+                shutil.copy2(old_path, new_path)   # copie d'abord
+                os.remove(old_path)                # puis supprime l'original
+                app.logger.info("migration legacy: %s → %s", old_path, new_path)
+        except Exception as exc:
+            # Ne jamais crasher au démarrage à cause de la migration
+            app.logger.warning("migration legacy skipped %s: %s", old_path, exc)
 
 
 # ── Gestion des utilisateurs ─────────────────────────────
@@ -287,6 +290,7 @@ def charger_users() -> list:
 
 
 def sauvegarder_users(users: list) -> None:
+    os.makedirs(DATA_DIR, exist_ok=True)
     with open(USERS_FILE, "w", encoding="utf-8") as f:
         json.dump(users, f, indent=2, ensure_ascii=False)
 
@@ -319,6 +323,7 @@ def sauvegarder(activites: list, user_id: int) -> None:
     """Sauvegarde les activités d'un utilisateur. Ne fonctionne JAMAIS sans user_id."""
     if not user_id:
         raise ValueError("sauvegarder() requiert un user_id valide — données isolées par utilisateur.")
+    os.makedirs(DATA_DIR, exist_ok=True)
     path = fichier_data(user_id)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(activites, f, indent=2, ensure_ascii=False)
@@ -354,6 +359,7 @@ def charger_trips(user_id: int) -> list:
 
 
 def sauvegarder_trips(trips: list, user_id: int) -> None:
+    os.makedirs(DATA_DIR, exist_ok=True)
     with open(fichier_trips(user_id), "w", encoding="utf-8") as f:
         json.dump(trips, f, indent=2, ensure_ascii=False)
 
@@ -1378,6 +1384,7 @@ def _charger_ai_trips(user_id: int) -> list:
 
 
 def _sauvegarder_ai_trips(trips: list, user_id: int) -> None:
+    os.makedirs(DATA_DIR, exist_ok=True)
     with open(_fichier_ai_trips(user_id), "w", encoding="utf-8") as f:
         json.dump(trips, f, indent=2, ensure_ascii=False)
 
@@ -2238,8 +2245,11 @@ def api_generate_trip():
 
 
 # ── Migration des fichiers legacy au démarrage ────────────
-with app.app_context():
-    _migrer_fichiers_legacy()
+try:
+    with app.app_context():
+        _migrer_fichiers_legacy()
+except Exception:
+    pass   # ne jamais empêcher gunicorn de démarrer
 
 
 if __name__ == "__main__":
