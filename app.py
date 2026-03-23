@@ -215,7 +215,7 @@ def callback_google():
 
     session["user_id"] = user_id
     session["email"]   = email
-    return redirect("/")
+    return redirect("/organiser")   # après OAuth → directement sur le générateur
 
 
 # ══════════════════════════════════════════════════════════
@@ -957,13 +957,45 @@ def supprimer_image(nom_fichier: str) -> None:
 
 @app.route("/")
 def index():
-    if "user_id" in session:
-        return redirect(url_for("organiser"))
-    # Visiteur non connecté — affiche la landing page
+    # ── Visiteur non connecté : landing page publique ─────
+    if "user_id" not in session:
+        return render_template("index.html",
+                               activites=[], trips=[], trips_par_id={},
+                               trip_actif=None, nouvelle=None,
+                               suggestions=[], suggestions_ia=[], email=None)
+
+    # ── Utilisateur connecté : page de gestion des activités ─
+    uid       = session["user_id"]
+    activites = charger(uid)
+    trips     = charger_trips(uid)
+    trips_par_id = {t["id"]: t for t in trips}
+
+    # Filtre par voyage (ex: /?trip=2)
+    trip_filter = request.args.get("trip", type=int)
+    trip_actif  = None
+    if trip_filter:
+        trip_actif = next((t for t in trips if t["id"] == trip_filter), None)
+        if trip_actif:
+            activites = [a for a in activites if a.get("trip_id") == trip_filter]
+
+    # Activité fraîchement ajoutée (ex: /?nouveau=5)
+    nouvelle_id = request.args.get("nouveau", type=int)
+    nouvelle    = next((a for a in activites if a["id"] == nouvelle_id), None) if nouvelle_id else None
+
+    suggestions    = []
+    suggestions_ia = []
+    if nouvelle:
+        suggestions_ia = nouvelle.get("suggestions_ia", [])
+
     return render_template("index.html",
-                           activites=[], trips=[], trips_par_id={},
-                           trip_actif=None, nouvelle=None,
-                           suggestions=[], suggestions_ia=[], email=None)
+                           activites=activites,
+                           trips=trips,
+                           trips_par_id=trips_par_id,
+                           trip_actif=trip_actif,
+                           nouvelle=nouvelle,
+                           suggestions=suggestions,
+                           suggestions_ia=suggestions_ia,
+                           email=session.get("email"))
 
 
 @app.route("/ajouter", methods=["POST"])
@@ -1420,7 +1452,7 @@ def login():
 
     session["user_id"] = user["id"]
     session["email"]   = user["email"]
-    return redirect("/")
+    return redirect("/organiser")   # après login → directement sur le générateur
 
 
 @app.route("/register", methods=["GET", "POST"])

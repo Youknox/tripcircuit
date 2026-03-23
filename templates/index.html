@@ -192,6 +192,29 @@
             margin: 0 auto;
             line-height: 1.65;
         }
+        .hero-cta {
+            display: flex; gap: 12px; justify-content: center;
+            flex-wrap: wrap; margin-top: 28px;
+        }
+        .btn-cta-hero {
+            padding: 14px 28px; border-radius: 14px; font-size: 16px;
+            font-weight: 700; text-decoration: none; font-family: inherit;
+            background: linear-gradient(135deg, #f97316, #ec4899 55%, #7c3aed);
+            color: #fff; box-shadow: 0 8px 28px rgba(236,72,153,.35);
+            transition: transform .15s, box-shadow .15s;
+        }
+        .btn-cta-hero:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 36px rgba(236,72,153,.45);
+        }
+        .btn-cta-ghost {
+            padding: 14px 24px; border-radius: 14px; font-size: 15px;
+            font-weight: 600; text-decoration: none; font-family: inherit;
+            background: rgba(255,255,255,.10); color: #fff;
+            border: 1.5px solid rgba(255,255,255,.25);
+            transition: background .15s;
+        }
+        .btn-cta-ghost:hover { background: rgba(255,255,255,.18); }
 
         /* ═══════════════════════════════════════
            PAGE
@@ -695,6 +718,12 @@
         <div class="hero-badge">✈️ Planificateur de voyage IA</div>
         <h1>Planifie ton voyage<br><span class="grd">en quelques secondes</span></h1>
         <p>Itinéraires optimisés par IA — sauvegarde tes activités, organise tes étapes et partage tes aventures.</p>
+        {% if not email %}
+        <div class="hero-cta">
+            <a href="/organiser" class="btn-cta-hero">✨ Créer mon itinéraire</a>
+            <a href="/login" class="btn-cta-ghost">Se connecter</a>
+        </div>
+        {% endif %}
     </div>
 </section>
 
