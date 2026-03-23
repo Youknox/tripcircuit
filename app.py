@@ -957,12 +957,9 @@ def supprimer_image(nom_fichier: str) -> None:
 
 @app.route("/")
 def index():
-    # ── Visiteur non connecté : landing page publique ─────
+    # ── Visiteur non connecté : landing page dédiée ───────
     if "user_id" not in session:
-        return render_template("index.html",
-                               activites=[], trips=[], trips_par_id={},
-                               trip_actif=None, nouvelle=None,
-                               suggestions=[], suggestions_ia=[], email=None)
+        return render_template("home.html")
 
     # ── Utilisateur connecté : page de gestion des activités ─
     uid       = session["user_id"]

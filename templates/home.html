@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ── SEO ─────────────────────────────────────────── -->
+  <title>GoAndTrip — Créez votre itinéraire de voyage en 30 secondes avec l'IA</title>
+  <meta name="description" content="GoAndTrip génère votre itinéraire de voyage jour par jour grâce à l'IA. Planifiez vos activités, organisez votre séjour et partagez vos aventures. Gratuit.">
+  <meta name="keywords" content="itinéraire de voyage, organiser un voyage, planificateur de voyage, voyage IA, planning voyage, activités voyage">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://goandtrip.fr/">
+
+  <!-- Open Graph -->
+  <meta property="og:title"       content="GoAndTrip — Itinéraire de voyage IA en 30 secondes">
+  <meta property="og:description" content="Générez un planning de voyage complet jour par jour grâce à l'IA. Activités, visites, parcours optimisés.">
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://goandtrip.fr/">
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "GoAndTrip",
+    "url": "https://goandtrip.fr",
+    "description": "Planificateur de voyage intelligent basé sur l'IA. Créez un itinéraire de voyage complet en 30 secondes.",
+    "applicationCategory": "TravelApplication",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+  }
+  </script>
+
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="shortcut icon" href="/static/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─────────────────────────────────────────────────
+       RESET & VARIABLES
+    ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #f97316;
+      --pink:   #ec4899;
+      --violet: #7c3aed;
+      --indigo: #4f46e5;
+      --brand:  linear-gradient(135deg, #f97316 0%, #ec4899 55%, #7c3aed 100%);
+      --dark:   #111827;
+      --mid:    #6b7280;
+      --light:  #e5e7eb;
+      --bg:     #f8f9fc;
+      --white:  #ffffff;
+      --radius: 18px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 20px rgba(0,0,0,.09), 0 16px 48px rgba(0,0,0,.10);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,.11), 0 32px 64px rgba(0,0,0,.13);
+    }
+
+    body {
+      font-family: "Inter", -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─────────────────────────────────────────────────
+       HEADER
+    ───────────────────────────────────────────────── */
+    header {
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0,0,0,.06);
+      height: 64px;
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 200;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 9px;
+      font-size: 20px; font-weight: 900; text-decoration: none;
+      letter-spacing: -0.6px;
+      background: var(--brand);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .logo img { width: 34px; height: 34px; flex-shrink: 0; display: block; }
+    .header-nav { display: flex; align-items: center; gap: 8px; }
+    .nav-link {
+      padding: 8px 14px; border-radius: 10px;
+      font-size: 13px; font-weight: 600; text-decoration: none;
+      color: var(--mid); transition: all .15s;
+    }
+    .nav-link:hover { background: var(--light); color: var(--dark); }
+    .nav-cta {
+      padding: 9px 18px; border-radius: 10px;
+      font-size: 13px; font-weight: 700; text-decoration: none;
+      background: var(--brand); color: #fff;
+      box-shadow: 0 4px 14px rgba(236,72,153,.28);
+      transition: opacity .15s, transform .15s;
+    }
+    .nav-cta:hover { opacity: .88; transform: translateY(-1px); }
+
+    /* ─────────────────────────────────────────────────
+       HERO
+    ───────────────────────────────────────────────── */
+    .hero {
+      position: relative; overflow: hidden;
+      padding: 100px 24px 90px;
+      text-align: center;
+      background: linear-gradient(170deg, #0d0b1f 0%, #1a1040 45%, #0c1445 100%);
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 15% 45%, rgba(249,115,22,.30) 0%, transparent 55%),
+        radial-gradient(ellipse 65% 70% at 85% 55%, rgba(124,58,237,.36) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 45% at 55% 10%, rgba(236,72,153,.18) 0%, transparent 50%);
+    }
+    .hero::after {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.10) 1px, transparent 0);
+      background-size: 36px 36px;
+      mask-image: radial-gradient(ellipse 75% 80% at 50% 50%, black 0%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 75% 80% at 50% 50%, black 0%, transparent 100%);
+    }
+    .hero-inner { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 16px; background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.18); border-radius: 20px;
+      font-size: 12px; font-weight: 600; color: rgba(255,255,255,.80);
+      margin-bottom: 24px; backdrop-filter: blur(8px); letter-spacing: .2px;
+    }
+    .hero h1 {
+      font-size: 52px; font-weight: 900;
+      letter-spacing: -2.5px; line-height: 1.10;
+      color: white; margin-bottom: 20px;
+    }
+    .hero h1 .grd {
+      background: linear-gradient(135deg, #fb923c, #ec4899 50%, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: 18px; color: rgba(255,255,255,.62);
+      line-height: 1.65; margin-bottom: 10px; max-width: 500px; margin-inline: auto;
+    }
+    .hero-disclaimer {
+      display: inline-flex; align-items: center; gap: 7px;
+      margin: 0 auto 32px;
+      padding: 8px 16px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12); border-radius: 10px;
+      font-size: 13px; font-weight: 500; color: rgba(255,255,255,.45);
+    }
+    .hero-disclaimer strong { color: rgba(255,255,255,.70); }
+    .hero-cta {
+      display: flex; gap: 14px; justify-content: center;
+      flex-wrap: wrap; margin-bottom: 52px;
+    }
+    .btn-hero-main {
+      padding: 16px 32px; border-radius: 14px; font-size: 17px;
+      font-weight: 800; text-decoration: none;
+      background: linear-gradient(135deg, #f97316, #ec4899 55%, #7c3aed);
+      color: #fff; box-shadow: 0 8px 30px rgba(236,72,153,.38);
+      transition: transform .15s, box-shadow .15s; letter-spacing: -.2px;
+    }
+    .btn-hero-main:hover { transform: translateY(-3px); box-shadow: 0 14px 40px rgba(236,72,153,.48); }
+    .btn-hero-ghost {
+      padding: 16px 26px; border-radius: 14px; font-size: 16px;
+      font-weight: 600; text-decoration: none;
+      background: rgba(255,255,255,.10); color: #fff;
+      border: 1.5px solid rgba(255,255,255,.25); transition: background .15s;
+    }
+    .btn-hero-ghost:hover { background: rgba(255,255,255,.18); }
+
+    /* Hero — exemple planning */
+    .hero-preview {
+      max-width: 520px; margin: 0 auto;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.15); border-radius: 20px;
+      padding: 22px 24px; backdrop-filter: blur(14px); text-align: left;
+    }
+    .preview-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .preview-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: rgba(255,255,255,.40);
+    }
+    .preview-pill {
+      font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+      background: rgba(249,115,22,.20); color: #fb923c;
+      border: 1px solid rgba(249,115,22,.30);
+    }
+    .preview-days { display: flex; flex-direction: column; gap: 10px; }
+    .preview-day { display: flex; align-items: flex-start; gap: 12px; }
+    .pday-num {
+      flex-shrink: 0; width: 30px; height: 30px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 900; color: #fff;
+    }
+    .d1 { background: linear-gradient(135deg,#f97316,#ec4899); }
+    .d2 { background: linear-gradient(135deg,#7c3aed,#4f46e5); }
+    .d3 { background: linear-gradient(135deg,#059669,#0ea5e9); }
+    .pday-body { flex: 1; }
+    .pday-title { font-size: 13px; font-weight: 700; color: rgba(255,255,255,.85); margin-bottom: 5px; }
+    .pday-acts { display: flex; flex-wrap: wrap; gap: 5px; }
+    .pday-act {
+      font-size: 11px; padding: 4px 10px; border-radius: 7px;
+      background: rgba(255,255,255,.10); color: rgba(255,255,255,.65);
+    }
+
+    /* ─────────────────────────────────────────────────
+       SECTIONS COMMUNES
+    ───────────────────────────────────────────────── */
+    .section { padding: 80px 24px; }
+    .section-inner { max-width: 1040px; margin: 0 auto; }
+    .section-badge {
+      display: inline-block; font-size: 12px; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      background: linear-gradient(135deg, rgba(249,115,22,.12), rgba(124,58,237,.12));
+      color: var(--violet); padding: 5px 14px; border-radius: 20px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(124,58,237,.18);
+    }
+    .section-title {
+      font-size: 36px; font-weight: 900; letter-spacing: -1.5px;
+      line-height: 1.2; margin-bottom: 12px;
+    }
+    .section-title .grd {
+      background: var(--brand);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .section-sub {
+      font-size: 16px; color: var(--mid); line-height: 1.65;
+      max-width: 520px;
+    }
+    .section-head { margin-bottom: 52px; }
+
+    /* ─────────────────────────────────────────────────
+       COMMENT ÇA MARCHE — 3 étapes
+    ───────────────────────────────────────────────── */
+    .steps { background: var(--white); }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+    .step-card {
+      background: var(--bg);
+      border: 1.5px solid var(--light);
+      border-radius: 20px; padding: 32px 28px;
+      position: relative; transition: box-shadow .2s, transform .2s;
+    }
+    .step-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-4px);
+    }
+    .step-num {
+      position: absolute; top: -14px; left: 28px;
+      width: 28px; height: 28px; border-radius: 9px;
+      background: var(--brand);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 900; color: #fff;
+    }
+    .step-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; margin-bottom: 18px;
+    }
+    .si-1 { background: linear-gradient(135deg, rgba(249,115,22,.12), rgba(249,115,22,.06)); }
+    .si-2 { background: linear-gradient(135deg, rgba(124,58,237,.12), rgba(124,58,237,.06)); }
+    .si-3 { background: linear-gradient(135deg, rgba(236,72,153,.12), rgba(236,72,153,.06)); }
+    .step-title { font-size: 17px; font-weight: 800; margin-bottom: 8px; letter-spacing: -.3px; }
+    .step-desc { font-size: 14px; color: var(--mid); line-height: 1.6; }
+
+    /* connecteur entre étapes */
+    .steps-grid::before {
+      content: none;
+    }
+    .step-arrow {
+      display: none;
+      align-self: center; font-size: 22px; color: var(--light);
+    }
+
+    /* ─────────────────────────────────────────────────
+       EXEMPLE DE PLANNING
+    ───────────────────────────────────────────────── */
+    .planning-section { background: var(--bg); }
+    .planning-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
+    }
+    .day-card {
+      background: var(--white); border: 1.5px solid var(--light);
+      border-radius: 20px; overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow .2s, transform .2s;
+    }
+    .day-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+    .day-header {
+      padding: 16px 20px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .day-dot {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 900; color: #fff; flex-shrink: 0;
+    }
+    .dc1 { background: linear-gradient(135deg,#f97316,#ec4899); }
+    .dc2 { background: linear-gradient(135deg,#7c3aed,#4f46e5); }
+    .day-city { font-size: 16px; font-weight: 800; letter-spacing: -.3px; }
+    .day-meta { font-size: 12px; color: var(--mid); font-weight: 500; }
+    .day-acts { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 10px; }
+    .act-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; background: var(--bg);
+      border-radius: 12px; border: 1px solid var(--light);
+    }
+    .act-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, rgba(249,115,22,.10), rgba(124,58,237,.10));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; flex-shrink: 0;
+    }
+    .act-body { flex: 1; }
+    .act-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+    .act-type { font-size: 11px; color: var(--mid); font-weight: 500; }
+    .act-tag {
+      font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 6px;
+      white-space: nowrap;
+    }
+    .tag-matin   { background: rgba(217,119,6,.10);  color: #d97706; }
+    .tag-midi    { background: rgba(5,150,105,.10);  color: #059669; }
+    .tag-apresmidi { background: rgba(3,105,161,.10); color: #0369a1; }
+    .tag-soir    { background: rgba(124,58,237,.10); color: #7c3aed; }
+
+    /* ─────────────────────────────────────────────────
+       POURQUOI GOANDTRIP
+    ───────────────────────────────────────────────── */
+    .benefits { background: var(--white); }
+    .benefits-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    }
+    .benefit-card {
+      padding: 28px; border-radius: 20px;
+      border: 1.5px solid var(--light);
+      background: var(--bg);
+      transition: box-shadow .2s, transform .2s;
+    }
+    .benefit-card:hover { box-shadow: var(--shadow-md); transform: translateY(-4px); }
+    .benefit-icon {
+      font-size: 28px; margin-bottom: 14px;
+      display: block;
+    }
+    .benefit-title { font-size: 16px; font-weight: 800; margin-bottom: 7px; letter-spacing: -.3px; }
+    .benefit-desc  { font-size: 14px; color: var(--mid); line-height: 1.6; }
+
+    /* ─────────────────────────────────────────────────
+       AVIS UTILISATEURS
+    ───────────────────────────────────────────────── */
+    .reviews { background: var(--bg); }
+    .reviews-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    }
+    .review-card {
+      background: var(--white); border: 1.5px solid var(--light);
+      border-radius: 20px; padding: 26px;
+      box-shadow: var(--shadow-sm);
+    }
+    .review-stars { font-size: 14px; margin-bottom: 12px; letter-spacing: 2px; }
+    .review-text {
+      font-size: 14px; line-height: 1.7; color: #374151;
+      font-style: italic; margin-bottom: 18px;
+    }
+    .review-author { display: flex; align-items: center; gap: 10px; }
+    .review-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 800; color: #fff; flex-shrink: 0;
+    }
+    .av1 { background: linear-gradient(135deg,#f97316,#ec4899); }
+    .av2 { background: linear-gradient(135deg,#7c3aed,#4f46e5); }
+    .av3 { background: linear-gradient(135deg,#059669,#0ea5e9); }
+    .review-name  { font-size: 13px; font-weight: 700; }
+    .review-place { font-size: 12px; color: var(--mid); }
+
+    /* ─────────────────────────────────────────────────
+       TEXTE SEO
+    ───────────────────────────────────────────────── */
+    .seo-section { background: var(--white); }
+    .seo-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px;
+    }
+    .seo-block h2 {
+      font-size: 20px; font-weight: 800; letter-spacing: -.5px;
+      margin-bottom: 10px;
+    }
+    .seo-block p {
+      font-size: 14px; color: var(--mid); line-height: 1.75;
+    }
+
+    /* ─────────────────────────────────────────────────
+       CTA FINAL
+    ───────────────────────────────────────────────── */
+    .cta-final {
+      background: linear-gradient(170deg, #0d0b1f 0%, #1a1040 50%, #0c1445 100%);
+      padding: 100px 24px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .cta-final::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 70% at 25% 50%, rgba(249,115,22,.22) 0%, transparent 60%),
+        radial-gradient(ellipse 55% 60% at 75% 50%, rgba(124,58,237,.28) 0%, transparent 60%);
+    }
+    .cta-inner { position: relative; z-index: 1; }
+    .cta-final h2 {
+      font-size: 40px; font-weight: 900; color: #fff;
+      letter-spacing: -1.8px; line-height: 1.15; margin-bottom: 16px;
+    }
+    .cta-final h2 .grd {
+      background: linear-gradient(135deg, #fb923c, #ec4899 50%, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .cta-final p {
+      font-size: 17px; color: rgba(255,255,255,.55);
+      margin-bottom: 36px; line-height: 1.6;
+    }
+    .btn-cta-final {
+      display: inline-block;
+      padding: 18px 40px; border-radius: 16px; font-size: 18px;
+      font-weight: 800; text-decoration: none; letter-spacing: -.3px;
+      background: linear-gradient(135deg, #f97316, #ec4899 55%, #7c3aed);
+      color: #fff; box-shadow: 0 12px 40px rgba(236,72,153,.40);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-cta-final:hover { transform: translateY(-3px); box-shadow: 0 18px 50px rgba(236,72,153,.50); }
+    .cta-trust {
+      margin-top: 22px; font-size: 13px; color: rgba(255,255,255,.35);
+    }
+    .cta-trust span { color: rgba(255,255,255,.55); font-weight: 600; }
+
+    /* ─────────────────────────────────────────────────
+       FOOTER
+    ───────────────────────────────────────────────── */
+    footer {
+      background: #0d0b1f; padding: 32px 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .footer-brand {
+      font-size: 16px; font-weight: 900; letter-spacing: -.5px;
+      background: var(--brand);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { font-size: 13px; color: rgba(255,255,255,.35); text-decoration: none; }
+    .footer-links a:hover { color: rgba(255,255,255,.70); }
+    .footer-copy { font-size: 12px; color: rgba(255,255,255,.22); }
+
+    /* ─────────────────────────────────────────────────
+       RESPONSIVE
+    ───────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      header { padding: 0 20px; }
+      .hero { padding: 72px 20px 68px; }
+      .hero h1 { font-size: 34px; letter-spacing: -1.5px; }
+      .hero-sub { font-size: 15px; }
+      .section { padding: 56px 20px; }
+      .section-title { font-size: 26px; }
+      .steps-grid,
+      .benefits-grid,
+      .reviews-grid { grid-template-columns: 1fr; }
+      .planning-grid { grid-template-columns: 1fr; }
+      .seo-grid { grid-template-columns: 1fr; gap: 24px; }
+      .cta-final { padding: 72px 20px; }
+      .cta-final h2 { font-size: 28px; }
+      footer { flex-direction: column; align-items: flex-start; padding: 28px 20px; }
+    }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 28px; letter-spacing: -1px; }
+      .btn-hero-main, .btn-hero-ghost { width: 100%; text-align: center; }
+      .hero-cta { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════ -->
+<header>
+  <a href="/" class="logo">
+    <img src="/static/logo.svg" alt="GoAndTrip logo">
+    GoAndTrip
+  </a>
+  <nav class="header-nav">
+    <a href="/login"    class="nav-link">Se connecter</a>
+    <a href="/organiser" class="nav-cta">✨ Essayer gratuitement</a>
+  </nav>
+</header>
+
+
+<!-- ════════════════════════════════════════════════
+     HERO
+════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">🗺️ Planificateur d'itinéraire IA · 100 % gratuit</div>
+
+    <h1>Crée ton itinéraire<br><span class="grd">de voyage en 30 secondes</span></h1>
+
+    <p class="hero-sub">
+      Planifie tes activités et ton parcours automatiquement grâce à l'IA.<br>
+      Dis-nous ta destination et ta durée — on génère tout.
+    </p>
+
+    <div class="hero-disclaimer">
+      🚫 <strong>Pas pour réserver un vol</strong> — pour organiser ton séjour sur place
+    </div>
+
+    <div class="hero-cta">
+      <a href="/organiser" class="btn-hero-main">✨ Créer mon itinéraire</a>
+      <a href="/register"  class="btn-hero-ghost">Créer un compte gratuit</a>
+    </div>
+
+    <!-- Exemple de planning -->
+    <div class="hero-preview">
+      <div class="preview-header">
+        <span class="preview-label">✦ Exemple généré par l'IA — Rome, 3 jours</span>
+        <span class="preview-pill">⚡ 30 sec</span>
+      </div>
+      <div class="preview-days">
+        <div class="preview-day">
+          <div class="pday-num d1">J1</div>
+          <div class="pday-body">
+            <div class="pday-title">Arrivée &amp; Antiquité</div>
+            <div class="pday-acts">
+              <span class="pday-act">🏛️ Colisée</span>
+              <span class="pday-act">⛲ Fontaine de Trevi</span>
+              <span class="pday-act">🍕 Trastevere</span>
+            </div>
+          </div>
+        </div>
+        <div class="preview-day">
+          <div class="pday-num d2">J2</div>
+          <div class="pday-body">
+            <div class="pday-title">Vatican &amp; Culture</div>
+            <div class="pday-acts">
+              <span class="pday-act">⛪ Basilique Saint-Pierre</span>
+              <span class="pday-act">🎨 Musées du Vatican</span>
+              <span class="pday-act">🌿 Borghèse</span>
+            </div>
+          </div>
+        </div>
+        <div class="preview-day">
+          <div class="pday-num d3">J3</div>
+          <div class="pday-body">
+            <div class="pday-title">Marchés &amp; Détente</div>
+            <div class="pday-acts">
+              <span class="pday-act">🛒 Campo de' Fiori</span>
+              <span class="pday-act">🏛️ Panthéon</span>
+              <span class="pday-act">☕ Café San Eustachio</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════
+     COMMENT ÇA MARCHE
+════════════════════════════════════════════════ -->
+<section class="section steps">
+  <div class="section-inner">
+    <div class="section-head">
+      <div class="section-badge">Comment ça marche</div>
+      <h2 class="section-title">Ton itinéraire en <span class="grd">3 étapes simples</span></h2>
+      <p class="section-sub">Pas besoin de passer des heures à planifier. GoAndTrip s'occupe de tout.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-icon si-1">📍</div>
+        <h3 class="step-title">Indique ta destination</h3>
+        <p class="step-desc">Entre le nom de la ville ou du pays que tu veux visiter. Barcelone, Tokyo, New York… n'importe où dans le monde.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-icon si-2">⚡</div>
+        <h3 class="step-title">L'IA génère ton planning</h3>
+        <p class="step-desc">En quelques secondes, GoAndTrip crée un itinéraire complet jour par jour avec les meilleures activités et visites.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-icon si-3">✈️</div>
+        <h3 class="step-title">Pars l'esprit tranquille</h3>
+        <p class="step-desc">Sauvegarde ton itinéraire, modifie-le à ta guise et partage-le avec tes compagnons de voyage en un clic.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════
+     EXEMPLE DE PLANNING
+════════════════════════════════════════════════ -->
+<section class="section planning-section">
+  <div class="section-inner">
+    <div class="section-head">
+      <div class="section-badge">Exemple de planning</div>
+      <h2 class="section-title">Un itinéraire <span class="grd">activité par activité</span></h2>
+      <p class="section-sub">Voici ce que GoAndTrip génère pour un week-end à Paris. Chaque créneau est optimisé pour minimiser les déplacements.</p>
+    </div>
+    <div class="planning-grid">
+
+      <!-- Jour 1 -->
+      <div class="day-card">
+        <div class="day-header">
+          <div class="day-dot dc1">J1</div>
+          <div>
+            <div class="day-city">Paris — Monuments</div>
+            <div class="day-meta">4 activités · ~12 km</div>
+          </div>
+        </div>
+        <div class="day-acts">
+          <div class="act-item">
+            <div class="act-icon">🗼</div>
+            <div class="act-body">
+              <div class="act-name">Tour Eiffel</div>
+              <div class="act-type">Monument · 7e arrondissement</div>
+            </div>
+            <span class="act-tag tag-matin">Matin</span>
+          </div>
+          <div class="act-item">
+            <div class="act-icon">🍽️</div>
+            <div class="act-body">
+              <div class="act-name">Déjeuner au Marché d'Aligre</div>
+              <div class="act-type">Gastronomie · 12e arrondissement</div>
+            </div>
+            <span class="act-tag tag-midi">Midi</span>
+          </div>
+          <div class="act-item">
+            <div class="act-icon">🎨</div>
+            <div class="act-body">
+              <div class="act-name">Musée du Louvre</div>
+              <div class="act-type">Culture · 1er arrondissement</div>
+            </div>
+            <span class="act-tag tag-apresmidi">Après-midi</span>
+          </div>
+          <div class="act-item">
+            <div class="act-icon">🌉</div>
+            <div class="act-body">
+              <div class="act-name">Promenade Pont des Arts</div>
+              <div class="act-type">Balade · Seine</div>
+            </div>
+            <span class="act-tag tag-soir">Soir</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Jour 2 -->
+      <div class="day-card">
+        <div class="day-header">
+          <div class="day-dot dc2">J2</div>
+          <div>
+            <div class="day-city">Paris — Culture &amp; Quartiers</div>
+            <div class="day-meta">4 activités · ~9 km</div>
+          </div>
+        </div>
+        <div class="day-acts">
+          <div class="act-item">
+            <div class="act-icon">⛪</div>
+            <div class="act-body">
+              <div class="act-name">Cathédrale Notre-Dame</div>
+              <div class="act-type">Monument · Île de la Cité</div>
+            </div>
+            <span class="act-tag tag-matin">Matin</span>
+          </div>
+          <div class="act-item">
+            <div class="act-icon">🧇</div>
+            <div class="act-body">
+              <div class="act-name">Brunch au Marais</div>
+              <div class="act-type">Gastronomie · 4e arrondissement</div>
+            </div>
+            <span class="act-tag tag-midi">Midi</span>
+          </div>
+          <div class="act-item">
+            <div class="act-icon">🏛️</div>
+            <div class="act-body">
+              <div class="act-name">Centre Pompidou</div>
+              <div class="act-type">Culture · 4e arrondissement</div>
+            </div>
+            <span class="act-tag tag-apresmidi">Après-midi</span>
+          </div>
+          <div class="act-item">
+            <div class="act-icon">🌆</div>
+            <div class="act-body">
+              <div class="act-name">Montmartre &amp; Sacré-Cœur</div>
+              <div class="act-type">Quartier · 18e arrondissement</div>
+            </div>
+            <span class="act-tag tag-soir">Soir</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════
+     POURQUOI GOANDTRIP
+════════════════════════════════════════════════ -->
+<section class="section benefits">
+  <div class="section-inner">
+    <div class="section-head">
+      <div class="section-badge">Pourquoi GoAndTrip</div>
+      <h2 class="section-title">Le planificateur de voyage <span class="grd">le plus simple</span></h2>
+      <p class="section-sub">Conçu pour les voyageurs qui veulent profiter de leur séjour, pas le subir.</p>
+    </div>
+    <div class="benefits-grid">
+      <div class="benefit-card">
+        <span class="benefit-icon">⚡</span>
+        <h3 class="benefit-title">Rapide comme l'éclair</h3>
+        <p class="benefit-desc">Ton itinéraire de voyage complet est généré en moins de 30 secondes. Fini les heures passées à chercher quoi faire.</p>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-icon">🎯</span>
+        <h3 class="benefit-title">Activités vérifiées</h3>
+        <p class="benefit-desc">GoAndTrip ne propose que des lieux réels et connus. Chaque activité est sélectionnée pour sa qualité et sa pertinence.</p>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-icon">🗓️</span>
+        <h3 class="benefit-title">Planifié jour par jour</h3>
+        <p class="benefit-desc">Ton itinéraire est organisé par demi-journées pour optimiser tes déplacements. Matin, midi, après-midi, soir.</p>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-icon">💾</span>
+        <h3 class="benefit-title">Sauvegarde &amp; partage</h3>
+        <p class="benefit-desc">Garde ton itinéraire dans ton espace perso et partage-le en un lien avec tes amis ou ta famille.</p>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-icon">📱</span>
+        <h3 class="benefit-title">100 % mobile</h3>
+        <p class="benefit-desc">Consulte ton planning directement depuis ton téléphone, même en voyage. Interface optimisée pour mobile.</p>
+      </div>
+      <div class="benefit-card">
+        <span class="benefit-icon">🆓</span>
+        <h3 class="benefit-title">Gratuit sans limite</h3>
+        <p class="benefit-desc">Crée autant d'itinéraires que tu veux sans payer. GoAndTrip est 100 % gratuit pour les voyageurs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════
+     AVIS UTILISATEURS
+════════════════════════════════════════════════ -->
+<section class="section reviews">
+  <div class="section-inner">
+    <div class="section-head">
+      <div class="section-badge">Avis utilisateurs</div>
+      <h2 class="section-title">Ils ont <span class="grd">organisé leur voyage</span> avec GoAndTrip</h2>
+    </div>
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"J'avais 5 jours à Tokyo et aucune idée de par où commencer. En 30 secondes, GoAndTrip m'a généré un planning complet. J'ai juste suivi le guide !"</p>
+        <div class="review-author">
+          <div class="review-avatar av1">S</div>
+          <div>
+            <div class="review-name">Sophie M.</div>
+            <div class="review-place">Voyage à Tokyo, 5 jours</div>
+          </div>
+        </div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Enfin un outil qui organise vraiment le séjour sur place. Pas de réservation de vol, pas de confusion. Juste les activités, dans le bon ordre."</p>
+        <div class="review-author">
+          <div class="review-avatar av2">T</div>
+          <div>
+            <div class="review-name">Thomas L.</div>
+            <div class="review-place">Week-end à Barcelone</div>
+          </div>
+        </div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Incroyable de voir la qualité du planning généré. Des lieux vrais, bien répartis dans la journée, avec des descriptions utiles. Je recommande à 100 %."</p>
+        <div class="review-author">
+          <div class="review-avatar av3">A</div>
+          <div>
+            <div class="review-name">Amira K.</div>
+            <div class="review-place">Itinéraire Rome, 3 jours</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════
+     TEXTE SEO
+════════════════════════════════════════════════ -->
+<section class="section seo-section">
+  <div class="section-inner">
+    <div class="seo-grid">
+      <div class="seo-block">
+        <h2>Créez votre itinéraire de voyage en quelques secondes</h2>
+        <p>GoAndTrip est un planificateur de voyage intelligent basé sur l'intelligence artificielle. Que vous souhaitiez organiser un voyage de 2 jours ou de 2 semaines, notre outil génère automatiquement un itinéraire complet, activité par activité, jour par jour. Idéal pour planifier vos vacances, un city break ou un voyage en solo.</p>
+      </div>
+      <div class="seo-block">
+        <h2>Organiser un voyage n'a jamais été aussi simple</h2>
+        <p>Plus besoin de passer des heures sur des blogs de voyage ou des forums. Notre planificateur de voyage IA analyse les meilleures activités de votre destination et construit un planning optimisé, en tenant compte des horaires, des distances et de vos préférences. Votre itinéraire de voyage est prêt en 30 secondes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════
+     CTA FINAL
+════════════════════════════════════════════════ -->
+<section class="cta-final">
+  <div class="cta-inner">
+    <h2>Prêt à planifier<br><span class="grd">ton prochain voyage ?</span></h2>
+    <p>Rejoins des milliers de voyageurs qui organisent leurs séjours avec GoAndTrip.</p>
+    <a href="/organiser" class="btn-cta-final">✨ Créer mon itinéraire gratuitement</a>
+    <div class="cta-trust">
+      <span>100 % gratuit</span> · Aucune carte bancaire · Résultat en 30 secondes
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════ -->
+<footer>
+  <span class="footer-brand">GoAndTrip</span>
+  <div class="footer-links">
+    <a href="/organiser">Créer un itinéraire</a>
+    <a href="/login">Se connecter</a>
+    <a href="/register">S'inscrire</a>
+    <a href="/sitemap.xml">Sitemap</a>
+  </div>
+  <span class="footer-copy">© 2025 GoAndTrip — Planificateur de voyage IA</span>
+</footer>
+
+</body>
+</html>
