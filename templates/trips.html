@@ -542,8 +542,9 @@
     </a>
     <div class="header-nav">
         <a href="/" class="nav-btn">Activités</a>
-        <a href="/organiser" class="nav-btn">Organiser</a>
-        <a href="/trips" class="nav-btn active">✈️ Voyages</a>
+        <a href="/organiser" class="nav-btn">🗺️ Organiser</a>
+        <a href="/mes-voyages" class="nav-btn">✈️ Mes voyages IA</a>
+        <a href="/trips" class="nav-btn active">📂 Voyages manuels</a>
         <a href="/logout" class="nav-btn">Déconnexion</a>
     </div>
 </header>
@@ -598,9 +599,21 @@
         </form>
     </div>
 
+    <!-- ══ VOYAGES IA ══ -->
+    <a href="/mes-voyages" style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(135deg,rgba(249,115,22,.10),rgba(124,58,237,.10));border:1.5px solid rgba(124,58,237,.18);border-radius:16px;padding:16px 20px;text-decoration:none;margin-bottom:24px;transition:box-shadow .2s;">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:26px;">🗺️</span>
+            <div>
+                <div style="font-size:15px;font-weight:800;color:#111827;letter-spacing:-.3px;">Mes voyages IA</div>
+                <div style="font-size:13px;color:#6b7280;margin-top:2px;">Plannings générés avec l'IA &amp; sauvegardés</div>
+            </div>
+        </div>
+        <span style="font-size:13px;font-weight:700;background:linear-gradient(135deg,#f97316,#ec4899 55%,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;">Voir →</span>
+    </a>
+
     <!-- ══ MES VOYAGES ══ -->
     <div class="section-title">
-        Mes voyages
+        Mes voyages manuels
         <span class="pill">{{ trips | length }}</span>
     </div>
 
