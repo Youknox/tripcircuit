@@ -1,19 +1,7 @@
-import json
-
-FICHIER = "data.json"
-
-
-def charger() -> list:
-    try:
-        with open(FICHIER, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
-
-
-def sauvegarder(activites: list) -> None:
-    with open(FICHIER, "w", encoding="utf-8") as f:
-        json.dump(activites, f, indent=4, ensure_ascii=False)
+"""
+data.py — utilitaires partagés (ne contient PAS de charger/sauvegarder globaux).
+L'isolation par utilisateur est gérée dans app.py via charger(user_id) / sauvegarder(activites, user_id).
+"""
 
 
 def prochain_id(activites: list) -> int:

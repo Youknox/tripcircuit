@@ -239,7 +239,41 @@ def _get_openai_client() -> openai.OpenAI:
         _openai_client = openai.OpenAI(api_key=api_key, timeout=30.0)
     return _openai_client
 
-USERS_FILE = "users.json"
+# ══════════════════════════════════════════════════════════
+#  STOCKAGE ISOLÉ PAR UTILISATEUR
+#  Tous les fichiers sont dans le sous-dossier data/
+#  pour éviter tout mélange de données entre utilisateurs.
+# ══════════════════════════════════════════════════════════
+
+DATA_DIR   = "data"
+USERS_FILE = os.path.join(DATA_DIR, "users.json")
+
+# Créer le dossier data/ au démarrage
+os.makedirs(DATA_DIR, exist_ok=True)
+
+
+def _migrer_fichiers_legacy() -> None:
+    """
+    Migration unique : déplace les anciens fichiers de la racine vers data/.
+    Exécuté une seule fois au démarrage si les anciens fichiers existent encore.
+    """
+    import shutil
+    patterns = [
+        ("users.json",       USERS_FILE),
+        ("data.json",        os.path.join(DATA_DIR, "data.json")),
+    ]
+    # Fichiers par utilisateur : data_<n>.json, trips_<n>.json, ai_trips_<n>.json
+    for pattern in ("data_*.json", "trips_*.json", "ai_trips_*.json"):
+        for old_path in glob.glob(pattern):
+            new_path = os.path.join(DATA_DIR, old_path)
+            if not os.path.exists(new_path):
+                shutil.move(old_path, new_path)
+                app.logger.info("migration: %s → %s", old_path, new_path)
+    # users.json à la racine
+    for old_path, new_path in patterns:
+        if os.path.exists(old_path) and not os.path.exists(new_path):
+            shutil.move(old_path, new_path)
+            app.logger.info("migration: %s → %s", old_path, new_path)
 
 
 # ── Gestion des utilisateurs ─────────────────────────────
@@ -264,20 +298,28 @@ def hash_mdp(mdp: str) -> str:
 # ── Données par utilisateur ──────────────────────────────
 
 def fichier_data(user_id: int) -> str:
-    return f"data_{user_id}.json"
+    """Retourne le chemin du fichier d'activités d'un utilisateur."""
+    return os.path.join(DATA_DIR, f"data_{user_id}.json")
 
 
-def charger(user_id: int | None = None) -> list:
-    path = fichier_data(user_id) if user_id else "data.json"
+def charger(user_id: int) -> list:
+    """Charge les activités d'un utilisateur. Ne fonctionne JAMAIS sans user_id."""
+    if not user_id:
+        raise ValueError("charger() requiert un user_id valide — données isolées par utilisateur.")
+    path = fichier_data(user_id)
     try:
         with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+        return data if isinstance(data, list) else []
     except (FileNotFoundError, json.JSONDecodeError):
         return []
 
 
-def sauvegarder(activites: list, user_id: int | None = None) -> None:
-    path = fichier_data(user_id) if user_id else "data.json"
+def sauvegarder(activites: list, user_id: int) -> None:
+    """Sauvegarde les activités d'un utilisateur. Ne fonctionne JAMAIS sans user_id."""
+    if not user_id:
+        raise ValueError("sauvegarder() requiert un user_id valide — données isolées par utilisateur.")
+    path = fichier_data(user_id)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(activites, f, indent=2, ensure_ascii=False)
 
@@ -285,11 +327,9 @@ def sauvegarder(activites: list, user_id: int | None = None) -> None:
 # ── Gestion des voyages (trips) ───────────────────────────
 
 def fichier_trips(user_id: int) -> str:
-    return f"trips_{user_id}.json"
+    """Retourne le chemin du fichier de voyages manuels d'un utilisateur."""
+    return os.path.join(DATA_DIR, f"trips_{user_id}.json")
 
-
-import os
-import json
 
 def charger_trips(user_id: int) -> list:
     try:
@@ -327,9 +367,9 @@ def trouver_trip_par_slug(slug: str) -> dict | None:
     Cherche un voyage par son slug public dans tous les fichiers trips_*.json.
     Retourne {"trip": ..., "owner_id": ...} ou None.
     """
-    for path in glob.glob("trips_*.json"):
+    for path in glob.glob(os.path.join(DATA_DIR, "trips_*.json")):
         try:
-            owner_id = int(path.replace("trips_", "").replace(".json", ""))
+            owner_id = int(os.path.basename(path).replace("trips_", "").replace(".json", ""))
         except ValueError:
             continue
         try:
@@ -360,11 +400,11 @@ def trouver_trip_avec_acces(uid: int, trip_id: int) -> dict | None:
     users_par_id = {u["id"]: u for u in users}
     own_file = fichier_trips(uid)
 
-    for path in glob.glob("trips_*.json"):
+    for path in glob.glob(os.path.join(DATA_DIR, "trips_*.json")):
         if path == own_file:
             continue
         try:
-            owner_id = int(path.replace("trips_", "").replace(".json", ""))
+            owner_id = int(os.path.basename(path).replace("trips_", "").replace(".json", ""))
         except ValueError:
             continue
         try:
@@ -392,12 +432,12 @@ def charger_trips_partages(user_id: int) -> list:
     partages = []
     own_file = fichier_trips(user_id)
 
-    for path in glob.glob("trips_*.json"):
+    for path in glob.glob(os.path.join(DATA_DIR, "trips_*.json")):
         if path == own_file:
             continue
         try:
             # Extraire l'owner_id depuis le nom du fichier trips_<uid>.json
-            owner_id = int(path.replace("trips_", "").replace(".json", ""))
+            owner_id = int(os.path.basename(path).replace("trips_", "").replace(".json", ""))
         except ValueError:
             continue
         try:
@@ -1323,7 +1363,8 @@ def supprimer_trip(trip_id: int):
 # Stockage séparé des plannings générés par IA (ne touche pas aux trips manuels)
 
 def _fichier_ai_trips(user_id: int) -> str:
-    return f"ai_trips_{user_id}.json"
+    """Retourne le chemin du fichier de plannings IA d'un utilisateur."""
+    return os.path.join(DATA_DIR, f"ai_trips_{user_id}.json")
 
 
 def _charger_ai_trips(user_id: int) -> list:
@@ -1343,7 +1384,7 @@ def _sauvegarder_ai_trips(trips: list, user_id: int) -> None:
 
 def _trouver_ai_trip(share_id: str) -> dict | None:
     """Cherche un planning IA par share_id dans tous les fichiers ai_trips_*.json."""
-    for path in glob.glob("ai_trips_*.json"):
+    for path in glob.glob(os.path.join(DATA_DIR, "ai_trips_*.json")):
         try:
             with open(path, "r", encoding="utf-8") as f:
                 trips = json.load(f)
@@ -1842,17 +1883,17 @@ def _activites_publiques_ville(ville: str) -> list:
     resultats = []
     seen_ids = set()
 
-    # Parcourt tous les fichiers trips_*.json
-    for fichier in glob.glob("trips_*.json"):
+    # Parcourt tous les fichiers trips_*.json dans data/
+    for fichier in glob.glob(os.path.join(DATA_DIR, "trips_*.json")):
         try:
             with open(fichier, "r", encoding="utf-8") as f:
                 trips = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             continue
 
-        # Extrait l'user_id depuis le nom du fichier (trips_1.json → 1)
+        # Extrait l'user_id depuis le nom du fichier (data/trips_1.json → 1)
         try:
-            uid = int(fichier.replace("trips_", "").replace(".json", ""))
+            uid = int(os.path.basename(fichier).replace("trips_", "").replace(".json", ""))
         except ValueError:
             continue
 
@@ -2194,6 +2235,11 @@ def api_generate_trip():
             "model":     "gpt-4o-mini",
         }
     }), 200
+
+
+# ── Migration des fichiers legacy au démarrage ────────────
+with app.app_context():
+    _migrer_fichiers_legacy()
 
 
 if __name__ == "__main__":
