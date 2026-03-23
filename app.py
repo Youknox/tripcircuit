@@ -9,7 +9,7 @@ import logging
 import re
 import time
 from functools import wraps
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 import requests
@@ -25,6 +25,9 @@ import openai
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "goandtrip-dev-secret-key")
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"]   = os.environ.get("RENDER", False)  # HTTPS only en prod
 
 
 # ══════════════════════════════════════════════════════════
@@ -213,6 +216,7 @@ def callback_google():
         sauvegarder_users(users)
         security_logger.info("new_google_user email=%s id=%s", email, user_id)
 
+    session.permanent  = True
     session["user_id"] = user_id
     session["email"]   = email
     return redirect("/organiser")   # après OAuth → directement sur le générateur
@@ -1447,6 +1451,7 @@ def login():
     if not user or user["mdp"] != hash_mdp(mdp):
         return render_template("login.html", erreur="Email ou mot de passe incorrect.")
 
+    session.permanent  = True
     session["user_id"] = user["id"]
     session["email"]   = user["email"]
     return redirect("/organiser")   # après login → directement sur le générateur
@@ -1472,9 +1477,10 @@ def register():
     users.append({"id": new_id, "email": email, "mdp": hash_mdp(mdp)})
     sauvegarder_users(users)
 
+    session.permanent  = True
     session["user_id"] = new_id
     session["email"]   = email
-    return redirect("/")
+    return redirect("/organiser")
 
 
 @app.route("/logout")
@@ -1486,6 +1492,73 @@ def logout():
 # ══════════════════════════════════════════════════════════
 #  MOT DE PASSE OUBLIÉ
 # ══════════════════════════════════════════════════════════
+
+# ── Envoi d'email (SendGrid) ──────────────────────────────
+
+def _send_reset_email(to_email: str, reset_url: str) -> bool:
+    """
+    Envoie le lien de réinitialisation via SendGrid.
+    Retourne True si l'envoi a réussi, False sinon.
+    Si SENDGRID_API_KEY n'est pas définie → retourne False (mode debug).
+    """
+    api_key = os.getenv("SENDGRID_API_KEY")
+    if not api_key:
+        return False   # pas de clé → mode debug, le lien sera affiché sur la page
+
+    sender = os.getenv("MAIL_SENDER", "noreply@goandtrip.fr")
+    html_body = f"""
+    <div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;color:#111827;">
+      <div style="background:linear-gradient(135deg,#f97316,#ec4899 55%,#7c3aed);
+                  padding:24px 32px;border-radius:14px 14px 0 0;text-align:center;">
+        <h1 style="color:#fff;font-size:22px;margin:0;letter-spacing:-.5px;">GoAndTrip</h1>
+      </div>
+      <div style="background:#f8f9fc;padding:32px;border-radius:0 0 14px 14px;
+                  border:1px solid #e5e7eb;border-top:none;">
+        <h2 style="font-size:20px;font-weight:800;margin:0 0 12px;">
+          Réinitialisation du mot de passe
+        </h2>
+        <p style="color:#6b7280;line-height:1.6;margin:0 0 24px;">
+          Vous avez demandé à réinitialiser votre mot de passe GoAndTrip.<br>
+          Cliquez sur le bouton ci-dessous. Le lien expire dans <strong>1 heure</strong>.
+        </p>
+        <a href="{reset_url}"
+           style="display:inline-block;padding:14px 28px;border-radius:12px;
+                  background:linear-gradient(135deg,#f97316,#ec4899 55%,#7c3aed);
+                  color:#fff;font-weight:700;text-decoration:none;font-size:15px;">
+          Réinitialiser mon mot de passe →
+        </a>
+        <p style="color:#9ca3af;font-size:12px;margin:24px 0 0;line-height:1.5;">
+          Si vous n'avez pas fait cette demande, ignorez cet email.<br>
+          Votre mot de passe reste inchangé.
+        </p>
+      </div>
+    </div>
+    """
+
+    try:
+        resp = requests.post(
+            "https://api.sendgrid.com/v3/mail/send",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type":  "application/json",
+            },
+            json={
+                "personalizations": [{"to": [{"email": to_email}]}],
+                "from":    {"email": sender, "name": "GoAndTrip"},
+                "subject": "Réinitialisation de votre mot de passe GoAndTrip",
+                "content": [{"type": "text/html", "value": html_body}],
+            },
+            timeout=10,
+        )
+        if resp.status_code == 202:
+            security_logger.info("reset_email_sent to=%s", to_email)
+            return True
+        security_logger.warning("sendgrid_error status=%s body=%s", resp.status_code, resp.text[:200])
+        return False
+    except Exception as exc:
+        security_logger.error("sendgrid_exception: %s", exc)
+        return False
+
 
 _RESET_SALT = "goandtrip-password-reset"
 
@@ -1524,25 +1597,31 @@ def forgot_password():
     users  = charger_users()
     user   = next((u for u in users if u["email"] == email), None)
 
+    debug_url = None  # lien visible sur la page uniquement si l'email n'est pas envoyé
+
     if user and user.get("mdp") is not None:
-        # Uniquement pour les comptes avec mot de passe (pas OAuth only)
+        # Uniquement pour les comptes avec mot de passe (pas OAuth uniquement)
         token     = _gen_reset_token(email)
-        base_url  = os.getenv("BASE_URL", "http://localhost:5000")
+        base_url  = request.url_root.rstrip("/")   # ex: https://goandtrip.com
         reset_url = f"{base_url}/reset-password/{token}"
 
-        # ── Envoi simulé en console (remplacez par SMTP en production) ──
-        print("\n" + "=" * 65)
-        print("  [GOANDTRIP] Réinitialisation du mot de passe")
-        print(f"  Email  : {email}")
-        print(f"  Lien   : {reset_url}")
-        print(f"  Expire : dans 1 heure")
-        print("=" * 65 + "\n")
+        sent = _send_reset_email(email, reset_url)
+
+        if not sent:
+            # Pas de clé SendGrid configurée → mode debug : on affiche le lien
+            debug_url = reset_url
+            security_logger.warning(
+                "reset_email_not_sent (no SENDGRID_API_KEY) email=%s ip=%s",
+                email, request.remote_addr
+            )
 
         security_logger.info(
-            "password_reset_requested email=%s ip=%s", email, request.remote_addr
+            "password_reset_requested email=%s sent=%s ip=%s",
+            email, sent, request.remote_addr
         )
 
-    return render_template("forgot_password.html", message=MSG_OK, erreur=None)
+    return render_template("forgot_password.html",
+                           message=MSG_OK, erreur=None, debug_url=debug_url)
 
 
 @app.route("/reset-password/<token>", methods=["GET", "POST"])
