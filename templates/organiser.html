@@ -692,6 +692,39 @@
             .pwa-banner { flex-direction: column; align-items: flex-start; }
             .btn-pwa-install { width: 100%; text-align: center; }
         }
+
+        /* ── Modal Sauvegarder ── */
+        .save-modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.48); backdrop-filter: blur(5px);
+            z-index: 1000; align-items: center; justify-content: center;
+        }
+        .save-modal-overlay.open { display: flex; }
+        .save-modal {
+            background: #fff; border-radius: 22px; padding: 28px;
+            width: min(480px, 95vw); box-shadow: 0 24px 64px rgba(0,0,0,.22);
+            animation: smPop .18s ease;
+        }
+        @keyframes smPop { from { opacity:0; transform:scale(.94) translateY(10px); } to { opacity:1; transform:none; } }
+        .sm-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .sm-title { font-size: 18px; font-weight: 800; letter-spacing: -.3px; }
+        .sm-close { background: none; border: none; font-size: 18px; cursor: pointer; color: #9ca3af; padding: 4px; border-radius: 6px; }
+        .sm-close:hover { color: var(--dark); }
+        .sm-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+        .sm-tab { flex: 1; padding: 10px; border-radius: 11px; border: 1.5px solid var(--light); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; background: var(--bg); color: var(--mid); transition: all .12s; }
+        .sm-tab.active { border-color: #7c3aed; background: rgba(124,58,237,.07); color: #7c3aed; }
+        .sm-field { margin-bottom: 16px; }
+        .sm-label { font-size: 12px; font-weight: 700; color: var(--mid); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 7px; display: block; }
+        .sm-input, .sm-select { width: 100%; padding: 12px 14px; border-radius: 11px; border: 1.5px solid var(--light); font-size: 14px; font-family: inherit; color: var(--dark); outline: none; background: var(--bg); transition: border-color .15s; }
+        .sm-input:focus, .sm-select:focus { border-color: #7c3aed; background: #fff; }
+        .sm-feedback { font-size: 13px; font-weight: 600; min-height: 20px; margin-bottom: 4px; }
+        .sm-feedback.err { color: #dc2626; }
+        .sm-feedback.ok  { color: #16a34a; }
+        .sm-actions { display: flex; gap: 10px; margin-top: 18px; }
+        .sm-btn-cancel { padding: 12px 18px; border-radius: 11px; background: var(--bg); border: 1.5px solid var(--light); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; color: var(--mid); }
+        .sm-btn-confirm { flex: 1; padding: 13px; border-radius: 11px; background: linear-gradient(135deg,#f97316,#ec4899 55%,#7c3aed); color: #fff; border: none; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity .15s; }
+        .sm-btn-confirm:hover { opacity: .88; }
+        .sm-btn-confirm:disabled { opacity: .55; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -1241,6 +1274,9 @@
     /* ── État courant (planning affiché) ── */
     let _lastTrip   = null;   // { trip: [...], meta: {...} }
     let _lastParams = null;   // { ville, jours, transport }
+    // Exposer sur window pour le modal de sauvegarde (hors IIFE)
+    Object.defineProperty(window, '_lastTrip',   { get: () => _lastTrip,   set: v => { _lastTrip   = v; } });
+    Object.defineProperty(window, '_lastParams', { get: () => _lastParams, set: v => { _lastParams = v; } });
 
     /* ══════════════════════════════════════════
        SAUVEGARDE & PARTAGE
@@ -1505,6 +1541,196 @@
     }
 
 })();
+</script>
+
+<!-- ══ MODAL SAUVEGARDE ══ -->
+<div class="save-modal-overlay" id="save-modal-overlay"
+     onclick="if(event.target===this) closeSaveModal()">
+  <div class="save-modal">
+    <div class="sm-header">
+      <span class="sm-title">💾 Sauvegarder ce voyage</span>
+      <button class="sm-close" onclick="closeSaveModal()" aria-label="Fermer">✕</button>
+    </div>
+
+    <!-- Onglets -->
+    <div class="sm-tabs">
+      <button class="sm-tab active" id="tab-new"
+              onclick="switchTab('new')">✨ Nouveau voyage</button>
+      <button class="sm-tab" id="tab-existing"
+              onclick="switchTab('existing')">📂 Voyage existant</button>
+    </div>
+
+    <!-- Mode : nouveau -->
+    <div id="sm-panel-new">
+      <div class="sm-field">
+        <label class="sm-label" for="sm-nom">Nom du voyage</label>
+        <input class="sm-input" type="text" id="sm-nom"
+               placeholder="Ex : Tokyo 2025, Séjour Rome…" maxlength="80">
+      </div>
+    </div>
+
+    <!-- Mode : existant -->
+    <div id="sm-panel-existing" style="display:none">
+      <div class="sm-field">
+        <label class="sm-label" for="sm-existing-select">Choisir un voyage</label>
+        <select class="sm-select" id="sm-existing-select">
+          <option value="">Chargement…</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sm-feedback" id="sm-feedback"></div>
+
+    <div class="sm-actions">
+      <button class="sm-btn-cancel" onclick="closeSaveModal()">Annuler</button>
+      <button class="sm-btn-confirm" id="sm-btn-confirm"
+              onclick="confirmSaveModal()">💾 Sauvegarder →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Modal Sauvegarder ────────────────────────────────────
+let _smMode = 'new';
+
+function openSaveModal() {
+    if (!window._lastTrip) return;
+    const overlay = document.getElementById('save-modal-overlay');
+    document.getElementById('sm-feedback').textContent = '';
+    document.getElementById('sm-feedback').className = 'sm-feedback';
+    document.getElementById('sm-btn-confirm').disabled = false;
+    document.getElementById('sm-btn-confirm').textContent = '💾 Sauvegarder →';
+
+    // Pré-remplir le nom avec ville + jours
+    const params = window._lastParams || {};
+    const nom    = (params.ville || '').replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+    const jours  = window._lastTrip?.trip?.length || params.jours || '';
+    document.getElementById('sm-nom').value = nom ? `${nom}${jours ? ' · ' + jours + ' jours' : ''}` : '';
+
+    switchTab('new');
+    overlay.classList.add('open');
+    setTimeout(() => document.getElementById('sm-nom').focus(), 100);
+}
+
+function closeSaveModal() {
+    document.getElementById('save-modal-overlay').classList.remove('open');
+}
+
+function switchTab(mode) {
+    _smMode = mode;
+    document.getElementById('tab-new').classList.toggle('active', mode === 'new');
+    document.getElementById('tab-existing').classList.toggle('active', mode === 'existing');
+    document.getElementById('sm-panel-new').style.display      = mode === 'new'      ? '' : 'none';
+    document.getElementById('sm-panel-existing').style.display = mode === 'existing' ? '' : 'none';
+
+    if (mode === 'existing') loadExistingTrips();
+}
+
+async function loadExistingTrips() {
+    const sel = document.getElementById('sm-existing-select');
+    sel.innerHTML = '<option value="">Chargement…</option>';
+    try {
+        const r = await fetch('/api/mes-voyages-list');
+        const list = await r.json();
+        if (!list.length) {
+            sel.innerHTML = '<option value="">Aucun voyage sauvegardé</option>';
+            return;
+        }
+        sel.innerHTML = list.map(t =>
+            `<option value="${t.share_id}">${t.nom} (${t.jours} jours)</option>`
+        ).join('');
+    } catch {
+        sel.innerHTML = '<option value="">Erreur de chargement</option>';
+    }
+}
+
+async function confirmSaveModal() {
+    const fb  = document.getElementById('sm-feedback');
+    const btn = document.getElementById('sm-btn-confirm');
+    fb.className = 'sm-feedback';
+    fb.textContent = '';
+
+    if (!window._lastTrip || !window._lastParams) return;
+
+    const params   = window._lastParams;
+    const planning = window._lastTrip.trip;
+    const jours    = window._lastTrip.meta?.jours ?? planning.length;
+
+    btn.disabled    = true;
+    btn.textContent = 'Sauvegarde…';
+
+    try {
+        let shareId, shareUrl;
+
+        if (_smMode === 'new') {
+            // ── Créer un nouveau voyage ──
+            const nom = document.getElementById('sm-nom').value.trim();
+            const res = await fetch('/api/save-trip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nom:       nom,
+                    ville:     params.ville,
+                    jours:     jours,
+                    transport: params.transport,
+                    planning:  planning,
+                }),
+            });
+            const d = await res.json();
+            if (!res.ok) throw new Error(d.error || 'Erreur');
+            shareId  = d.share_id;
+            shareUrl = d.share_url;
+
+        } else {
+            // ── Mettre à jour un voyage existant ──
+            const sel     = document.getElementById('sm-existing-select');
+            const shareIdTarget = sel.value;
+            if (!shareIdTarget) throw new Error('Choisissez un voyage');
+            const res = await fetch('/api/update-ai-trip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ share_id: shareIdTarget, planning }),
+            });
+            const d = await res.json();
+            if (!res.ok) throw new Error(d.error || 'Erreur');
+            shareId  = d.share_id;
+            shareUrl = d.share_url;
+        }
+
+        // Succès : fermer modal et afficher le panel partage
+        closeSaveModal();
+
+        // Réutilise le panel partage existant
+        const shareUrlInput = document.getElementById('share-url-input');
+        const btnOpen       = document.getElementById('btn-open');
+        const saveBar       = document.getElementById('save-bar');
+        const sharePanel    = document.getElementById('share-panel');
+
+        if (shareUrlInput && btnOpen && saveBar && sharePanel) {
+            shareUrlInput.value       = shareUrl;
+            btnOpen.href              = shareUrl;
+            saveBar.style.display     = 'none';
+            sharePanel.style.display  = 'block';
+            sharePanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+    } catch (e) {
+        fb.textContent = '⚠️ ' + e.message;
+        fb.className   = 'sm-feedback err';
+        btn.disabled    = false;
+        btn.textContent = '💾 Sauvegarder →';
+    }
+}
+
+// Remplacer le listener du bouton save par l'ouverture du modal
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('btn-save');
+    if (btn) {
+        btn.replaceWith(btn.cloneNode(true));          // retire l'ancien listener
+        document.getElementById('btn-save')
+            .addEventListener('click', openSaveModal);
+    }
+});
 </script>
 
 </body>

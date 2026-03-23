@@ -1370,10 +1370,11 @@ def api_save_trip():
     if not data:
         return jsonify({"error": "Corps JSON manquant."}), 400
 
-    ville    = sanitize_ville(str(data.get("ville", "")))
-    planning = data.get("planning")
-    jours    = data.get("jours")
+    ville     = sanitize_ville(str(data.get("ville", "")))
+    planning  = data.get("planning")
+    jours     = data.get("jours")
     transport = sanitize_transport(str(data.get("transport", "")))
+    nom       = str(data.get("nom", "")).strip()[:80]
 
     if not ville:
         return jsonify({"error": "Champ 'ville' invalide."}), 400
@@ -1393,12 +1394,15 @@ def api_save_trip():
     if len(ai_trips) >= 30:
         ai_trips = ai_trips[-29:]   # garde les 29 plus récents, libère une place
 
-    share_id = uuid.uuid4().hex          # ex : "4a7f2bc1e3d09812..."
+    share_id = uuid.uuid4().hex
     base_url = request.host_url.rstrip("/")
+    if not nom:
+        nom = f"{ville.title()} · {jours} jour{'s' if jours > 1 else ''}"
 
     record = {
         "share_id":   share_id,
         "user_id":    user_id,
+        "nom":        nom,
         "ville":      ville,
         "jours":      jours,
         "transport":  transport,
@@ -1418,6 +1422,89 @@ def api_save_trip():
         "share_id":  share_id,
         "share_url": f"{base_url}/share/{share_id}",
     }), 201
+
+
+@app.route("/api/update-ai-trip", methods=["POST"])
+@login_required
+def api_update_ai_trip():
+    """Remplace le planning d'un voyage IA existant (même share_id)."""
+    user_id  = session["user_id"]
+    data     = request.get_json(silent=True) or {}
+    share_id = str(data.get("share_id", ""))
+    planning = data.get("planning")
+
+    if not re.fullmatch(r"[0-9a-f]{32}", share_id):
+        return jsonify({"error": "share_id invalide."}), 400
+    if not isinstance(planning, list) or len(planning) == 0:
+        return jsonify({"error": "Planning invalide."}), 400
+
+    ai_trips = _charger_ai_trips(user_id)
+    trip     = next((t for t in ai_trips if t["share_id"] == share_id), None)
+    if not trip:
+        return jsonify({"error": "Voyage introuvable."}), 404
+
+    trip["planning"]    = planning
+    trip["jours"]       = len(planning)
+    trip["updated_at"]  = datetime.now(timezone.utc).isoformat()
+    _sauvegarder_ai_trips(ai_trips, user_id)
+
+    return jsonify({
+        "share_id":  share_id,
+        "share_url": f"{request.host_url.rstrip('/')}/share/{share_id}",
+    })
+
+
+@app.route("/api/delete-ai-trip", methods=["POST"])
+@login_required
+def api_delete_ai_trip():
+    """Supprime un voyage IA de l'espace personnel."""
+    user_id  = session["user_id"]
+    data     = request.get_json(silent=True) or {}
+    share_id = str(data.get("share_id", ""))
+
+    if not re.fullmatch(r"[0-9a-f]{32}", share_id):
+        return jsonify({"error": "share_id invalide."}), 400
+
+    ai_trips  = _charger_ai_trips(user_id)
+    new_trips = [t for t in ai_trips if t["share_id"] != share_id]
+    if len(new_trips) == len(ai_trips):
+        return jsonify({"error": "Voyage introuvable."}), 404
+
+    _sauvegarder_ai_trips(new_trips, user_id)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/mes-voyages-list")
+@login_required
+def api_mes_voyages_list():
+    """Retourne la liste des voyages IA de l'utilisateur (pour le dropdown)."""
+    user_id  = session["user_id"]
+    ai_trips = _charger_ai_trips(user_id)
+    return jsonify([
+        {
+            "share_id":   t["share_id"],
+            "nom":        t.get("nom", f"{t['ville']} · {t['jours']} jours"),
+            "ville":      t["ville"],
+            "jours":      t["jours"],
+            "created_at": t.get("created_at", ""),
+        }
+        for t in reversed(ai_trips)
+    ])
+
+
+@app.route("/mes-voyages")
+@login_required
+def mes_voyages():
+    """Page privée : liste des plannings IA sauvegardés."""
+    user_id  = session["user_id"]
+    ai_trips = list(reversed(_charger_ai_trips(user_id)))
+    base_url = request.host_url.rstrip("/")
+    return render_template(
+        "mes_voyages.html",
+        ai_trips=ai_trips,
+        base_url=base_url,
+        email=session.get("email"),
+    )
 
 
 @app.route("/share/<share_id>")

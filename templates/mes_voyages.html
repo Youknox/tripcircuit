@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mes voyages — GoAndTrip</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --orange: #f97316; --pink: #ec4899; --violet: #7c3aed;
+      --brand: linear-gradient(135deg, #f97316 0%, #ec4899 55%, #7c3aed 100%);
+      --dark: #111827; --mid: #6b7280; --light: #e5e7eb; --bg: #f8f9fc; --white: #fff;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 20px rgba(0,0,0,.09), 0 16px 48px rgba(0,0,0,.10);
+    }
+    body { font-family: "Inter", sans-serif; background: var(--bg); color: var(--dark); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    /* ── Header ── */
+    header { background: rgba(255,255,255,.94); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,.06); height: 64px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .logo { display: flex; align-items: center; gap: 9px; font-size: 20px; font-weight: 900; text-decoration: none; letter-spacing: -.6px; background: var(--brand); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .logo img { width: 34px; height: 34px; flex-shrink: 0; }
+    .header-nav { display: flex; align-items: center; gap: 6px; }
+    .nav-btn { padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--mid); transition: all .15s; }
+    .nav-btn:hover { background: var(--light); color: var(--dark); }
+    .nav-btn.active { background: var(--brand); color: #fff; }
+
+    /* ── Page ── */
+    .page { max-width: 900px; margin: 0 auto; padding: 48px 24px 100px; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 36px; flex-wrap: wrap; gap: 14px; }
+    .page-title { font-size: 28px; font-weight: 900; letter-spacing: -.8px; }
+    .page-title span { background: var(--brand); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .btn-new { padding: 11px 20px; border-radius: 11px; font-size: 14px; font-weight: 700; text-decoration: none; background: var(--brand); color: #fff; box-shadow: 0 4px 14px rgba(236,72,153,.28); transition: opacity .15s, transform .15s; }
+    .btn-new:hover { opacity: .88; transform: translateY(-1px); }
+
+    /* ── Grille ── */
+    .trips-grid { display: flex; flex-direction: column; gap: 16px; }
+
+    .trip-card { background: var(--white); border: 1.5px solid var(--light); border-radius: 20px; padding: 22px 24px; box-shadow: var(--shadow-sm); transition: box-shadow .2s, transform .2s; display: flex; align-items: flex-start; gap: 18px; }
+    .trip-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+    .trip-dot { flex-shrink: 0; width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; background: linear-gradient(135deg, rgba(249,115,22,.12), rgba(124,58,237,.12)); }
+
+    .trip-body { flex: 1; min-width: 0; }
+    .trip-nom { font-size: 17px; font-weight: 800; letter-spacing: -.3px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .trip-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .trip-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .badge-ville { background: rgba(79,70,229,.08); color: #4f46e5; }
+    .badge-jours { background: rgba(249,115,22,.08); color: #f97316; }
+    .badge-date  { background: rgba(107,114,128,.08); color: var(--mid); }
+
+    .trip-preview { display: flex; flex-wrap: wrap; gap: 5px; }
+    .day-pill { font-size: 11px; padding: 4px 10px; border-radius: 7px; background: var(--bg); border: 1px solid var(--light); color: var(--mid); font-weight: 600; }
+
+    .trip-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .btn-voir { padding: 9px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; text-decoration: none; background: var(--brand); color: #fff; transition: opacity .15s; }
+    .btn-voir:hover { opacity: .85; }
+    .btn-copy-link { padding: 9px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; background: rgba(79,70,229,.08); color: #4f46e5; border: none; cursor: pointer; font-family: inherit; transition: background .15s; }
+    .btn-copy-link:hover { background: rgba(79,70,229,.14); }
+    .btn-del-trip { padding: 9px 12px; border-radius: 10px; font-size: 13px; background: rgba(239,68,68,.06); border: 1.5px solid rgba(239,68,68,.14); color: #dc2626; cursor: pointer; font-family: inherit; transition: background .15s; }
+    .btn-del-trip:hover { background: rgba(239,68,68,.12); }
+
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 80px 24px; }
+    .empty-icon { width: 80px; height: 80px; border-radius: 22px; background: linear-gradient(135deg, rgba(249,115,22,.10), rgba(124,58,237,.10)); border: 2px solid rgba(249,115,22,.14); display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 20px; }
+    .empty h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+    .empty p { color: var(--mid); font-size: 14px; margin-bottom: 24px; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--dark); color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; display: none; z-index: 500; }
+    .toast.show { display: block; animation: fadeUp .2s ease; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+    @media (max-width: 600px) {
+      header { padding: 0 16px; }
+      .page { padding: 32px 16px 80px; }
+      .trip-card { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">
+    <img src="/static/logo.svg" alt="GoAndTrip">
+    GoAndTrip
+  </a>
+  <nav class="header-nav">
+    <a href="/organiser"  class="nav-btn">🗺️ Organiser</a>
+    <a href="/mes-voyages" class="nav-btn active">✈️ Mes voyages</a>
+    <a href="/trips"      class="nav-btn">📂 Activités</a>
+    <a href="/logout"     class="nav-btn">Déconnexion</a>
+  </nav>
+</header>
+
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Mes voyages <span>IA</span></h1>
+    <a href="/organiser" class="btn-new">✨ Nouveau voyage</a>
+  </div>
+
+  {% if ai_trips %}
+  <div class="trips-grid">
+    {% for trip in ai_trips %}
+    <div class="trip-card" id="card-{{ trip.share_id }}">
+      <div class="trip-dot">🗺️</div>
+      <div class="trip-body">
+        <div class="trip-nom">{{ trip.nom or (trip.ville | title + ' · ' + trip.jours | string + ' jours') }}</div>
+        <div class="trip-meta">
+          {% if trip.ville %}
+          <span class="trip-badge badge-ville">📍 {{ trip.ville | title }}</span>
+          {% endif %}
+          <span class="trip-badge badge-jours">📅 {{ trip.jours }} jour{{ 's' if trip.jours > 1 }}</span>
+          {% if trip.created_at %}
+          <span class="trip-badge badge-date">
+            {{ trip.created_at[:10] }}
+          </span>
+          {% endif %}
+        </div>
+
+        <!-- Aperçu des jours -->
+        <div class="trip-preview">
+          {% for day in trip.planning[:4] %}
+          <span class="day-pill">Jour {{ day.day }} — {{ day.activities | length }} activité{{ 's' if day.activities | length > 1 }}</span>
+          {% endfor %}
+          {% if trip.planning | length > 4 %}
+          <span class="day-pill">+{{ trip.planning | length - 4 }} jours</span>
+          {% endif %}
+        </div>
+
+        <div class="trip-actions">
+          <a class="btn-voir" href="/share/{{ trip.share_id }}" target="_blank" rel="noopener">
+            👁️ Voir le planning
+          </a>
+          <button class="btn-copy-link"
+                  onclick="copyLink('{{ base_url }}/share/{{ trip.share_id }}')">
+            🔗 Copier le lien
+          </button>
+          <button class="btn-del-trip"
+                  onclick="supprimerVoyage('{{ trip.share_id }}', this)">
+            🗑️ Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">✈️</div>
+    <h3>Aucun voyage sauvegardé</h3>
+    <p>Génère un itinéraire avec l'IA et sauvegarde-le pour le retrouver ici.</p>
+    <a href="/organiser" class="btn-new">✨ Créer mon premier itinéraire</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function showToast(msg, duration = 2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+async function copyLink(url) {
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = url; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  showToast('✓ Lien copié !');
+}
+
+async function supprimerVoyage(shareId, btn) {
+  if (!confirm('Supprimer définitivement ce voyage ?')) return;
+  btn.disabled = true;
+  btn.textContent = 'Suppression…';
+  try {
+    const r = await fetch('/api/delete-ai-trip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ share_id: shareId }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Erreur');
+    const card = document.getElementById('card-' + shareId);
+    card.style.transition = 'opacity .3s, transform .3s';
+    card.style.opacity = '0'; card.style.transform = 'scale(.97)';
+    setTimeout(() => card.remove(), 300);
+    showToast('✓ Voyage supprimé');
+  } catch (e) {
+    btn.disabled = false; btn.textContent = '🗑️ Supprimer';
+    showToast('⚠️ ' + e.message);
+  }
+}
+</script>
+</body>
+</html>
