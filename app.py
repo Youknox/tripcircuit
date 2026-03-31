@@ -1873,15 +1873,97 @@ _SEO_INTROS: dict[str, str] = {
         "Le Château de Prague, le Pont Charles et la Vieille Ville attirent des millions de visiteurs. "
         "Organisez votre séjour en Bohême avec GoAndTrip."
     ),
+    "nice": (
+        "Nice, perle de la Côte d'Azur, enchante avec sa Promenade des Anglais, "
+        "sa vieille ville colorée et ses marchés provençaux. "
+        "Entre mer Méditerranée et arrière-pays niçois, chaque journée est une invitation à la dolce vita. "
+        "GoAndTrip vous compose l'itinéraire parfait sur la Riviera française."
+    ),
+    "marseille": (
+        "Marseille, plus ancienne ville de France, dévoile un caractère unique mêlant authenticité méditerranéenne "
+        "et modernité. Le Vieux-Port, le MuCEM, les Calanques et le cours Julien font de la cité phocéenne "
+        "une destination à part entière. Planifiez votre séjour avec GoAndTrip."
+    ),
+    "lyon": (
+        "Lyon, capitale mondiale de la gastronomie, séduit avec ses bouchons lyonnais, "
+        "son quartier du Vieux-Lyon classé UNESCO et sa presqu'île animée. "
+        "Entre histoire, culture et art culinaire, Lyon s'impose comme une étape incontournable en France. "
+        "Organisez votre visite avec GoAndTrip."
+    ),
+    "dubai": (
+        "Dubaï, métropole futuriste du désert, impressionne par son architecture spectaculaire, "
+        "ses centres commerciaux géants et ses expériences de luxe uniques. "
+        "Du Burj Khalifa aux souks dorés, la ville n'a de cesse d'étonner les voyageurs. "
+        "GoAndTrip vous prépare un séjour inoubliable à Dubaï."
+    ),
+    "bangkok": (
+        "Bangkok, capitale vibrante de la Thaïlande, fascine par ses temples dorés, "
+        "ses marchés flottants, sa street food légendaire et sa vie nocturne électrisante. "
+        "Le Grand Palais, Wat Pho et Khao San Road ne sont que le début de l'aventure thaïlandaise. "
+        "Laissez GoAndTrip organiser votre escapade à Bangkok."
+    ),
+    "bali": (
+        "Bali, l'île des dieux, envoûte par ses rizières en terrasses, ses temples hindous, "
+        "ses plages de surf et sa culture spirituelle unique en Indonésie. "
+        "Ubud, Seminyak et Uluwatu offrent des atmosphères radicalement différentes. "
+        "GoAndTrip crée votre itinéraire balinais sur-mesure."
+    ),
+    "istanbul": (
+        "Istanbul, ville aux deux visages, enjambe l'Europe et l'Asie avec une richesse historique incomparable. "
+        "Sainte-Sophie, le Grand Bazar, le Palais de Topkapi et les rives du Bosphore "
+        "en font l'une des destinations les plus fascinantes au monde. "
+        "Planifiez votre voyage à Istanbul avec GoAndTrip."
+    ),
+    "doha": (
+        "Doha, capitale ultramoderne du Qatar, étonne par ses gratte-ciels futuristes, "
+        "son musée d'art islamique de renommée mondiale et son souk traditionnel de Waqif. "
+        "La corniche et les îles artificielles complètent ce tableau contemporain. "
+        "GoAndTrip vous guide dans ce joyau du Golfe persique."
+    ),
+    "seoul": (
+        "Séoul, métropole coréenne en perpétuelle effervescence, mêle palais royaux dynastiques "
+        "et quartiers branchés comme Hongdae ou Gangnam. "
+        "La K-pop, la gastronomie coréenne et les temples bouddhistes attendent les voyageurs. "
+        "GoAndTrip vous compose l'itinéraire séoulite idéal."
+    ),
+    "singapour": (
+        "Singapour, cité-état iconique d'Asie du Sud-Est, bluffe par sa propreté, "
+        "sa diversité culinaire hallucinante et ses attractions comme Gardens by the Bay. "
+        "Marina Bay Sands, Chinatown et Little India forment un melting-pot culturel unique. "
+        "Organisez votre séjour à Singapour avec GoAndTrip."
+    ),
+    "copenhague": (
+        "Copenhague, capitale danoise du bonheur, charme par son architecture colorée de Nyhavn, "
+        "ses palais royaux, ses musées de design et sa culture vélo incomparable. "
+        "La gastronomie nordique et l'art de vivre hygge font de Copenhague une escapade inoubliable. "
+        "GoAndTrip crée votre itinéraire scandinave."
+    ),
+    "marrakech": (
+        "Marrakech, la ville ocre, envoûte par ses souks labyrinthiques, "
+        "la place Jemaa el-Fna et ses palais majestueux comme la Bahia. "
+        "Les jardins de la Majorelle, les riads et la gastronomie marocaine complètent l'expérience. "
+        "GoAndTrip vous emmène au cœur du Maghreb."
+    ),
+    "cape-town": (
+        "Le Cap, perle de l'Afrique du Sud, éblouit par la Table Mountain, "
+        "les plages de Camps Bay, le quartier coloré de Bo-Kaap et les vignobles de Stellenbosch. "
+        "La péninsule du Cap et Robben Island ajoutent une dimension historique unique. "
+        "GoAndTrip vous prépare une aventure sud-africaine inoubliable."
+    ),
+    "londres": (
+        "Londres, capitale cosmopolite du Royaume-Uni, regorge de musées gratuits de classe mondiale, "
+        "de marchés animés et de quartiers aux atmosphères uniques. "
+        "Big Ben, Tower Bridge, Notting Hill et les pubs historiques composent le décor. "
+        "GoAndTrip vous aide à naviguer dans l'immensité londonienne."
+    ),
 }
 
 # Durées populaires proposées en maillage interne
 _DUREES_POPULAIRES = [1, 2, 3, 5, 7]
 
-# Villes populaires pour le sitemap
+# Villes populaires pour le sitemap (et maillage interne)
 _VILLES_SITEMAP = list(_SEO_INTROS.keys()) + [
-    "madrid", "vienne", "budapest", "dubai", "singapour",
-    "bangkok", "new-york", "los-angeles", "sydney", "marrakech",
+    "madrid", "vienne", "budapest", "los-angeles", "sydney",
 ]
 
 def _activites_publiques_ville(ville: str) -> list:
@@ -1928,62 +2010,132 @@ def _slugifier(texte: str) -> str:
     return texte.lower().replace(" ", "-").replace("'", "-").replace("_", "-")
 
 
-def _seo_context(ville_slug: str, jours: int | None) -> dict:
+def _seo_context(ville_slug: str, jours: int | None, page_type: str = "que-faire") -> dict:
     """Construit le contexte commun pour les pages SEO ville."""
     ville_display = ville_slug.replace("-", " ").title()
     activites     = _activites_publiques_ville(ville_display)
     intro_text    = _SEO_INTROS.get(ville_slug.lower(), "")
 
+    # URL de base selon le type de page pour les liens de durée
+    def _url_duree(d: int) -> str:
+        if page_type == "itineraire":
+            return f"/itineraire-{ville_slug}-{d}-jours"
+        elif page_type == "visiter":
+            return f"/visiter-{ville_slug}-{d}-jours"
+        return f"/itineraire-{ville_slug}-{d}-jours"
+
     # Liens vers les autres durées de la même ville (maillage interne)
     durees_liens = [
         {
             "label": f"{d} jour{'s' if d > 1 else ''}",
-            "url":   f"/quoi-faire-a-{ville_slug}-{d}-jours",
+            "url":   _url_duree(d),
             "actif": d == jours,
         }
         for d in _DUREES_POPULAIRES
     ]
 
-    if jours:
+    # Maillage interne vers d'autres villes (max 10, hors ville courante)
+    autres_villes = [
+        {
+            "slug":  s,
+            "label": s.replace("-", " ").title(),
+            "url":   f"/que-faire-a-{s}",
+        }
+        for s in _VILLES_SITEMAP
+        if s != ville_slug
+    ][:10]
+
+    # Titre, meta description et canonical selon le type de page
+    if page_type == "itineraire" and jours:
+        title = (
+            f"Itinéraire {ville_display} {jours} jour{'s' if jours > 1 else ''} "
+            f"— Que voir & faire — GoAndTrip"
+        )
+        meta_description = (
+            f"Itinéraire {ville_display} {jours} jours : activités incontournables, "
+            f"planning jour par jour et conseils de voyage. "
+            f"Générez votre itinéraire voyage IA personnalisé sur GoAndTrip."
+        )
+        canonical = f"https://goandtrip.fr/itineraire-{ville_slug}-{jours}-jours"
+    elif page_type == "visiter" and jours:
+        title = (
+            f"Visiter {ville_display} en {jours} jour{'s' if jours > 1 else ''} "
+            f"— Programme complet — GoAndTrip"
+        )
+        meta_description = (
+            f"Comment visiter {ville_display} en {jours} jour{'s' if jours > 1 else ''} ? "
+            f"Programme détaillé, activités à ne pas manquer et conseils pratiques. "
+            f"Organisez votre voyage {ville_display} avec GoAndTrip, le planificateur IA."
+        )
+        canonical = f"https://goandtrip.fr/visiter-{ville_slug}-{jours}-jours"
+    elif jours:
         title = f"Que faire à {ville_display} en {jours} jour{'s' if jours > 1 else ''} — GoAndTrip"
         meta_description = (
             f"Découvrez les meilleures activités à {ville_display} en {jours} jour{'s' if jours > 1 else ''} "
             f"avec un itinéraire optimisé par GoAndTrip. Réservez vos activités et hôtels facilement."
         )
-        canonical = f"https://goandtrip.fr/quoi-faire-a-{ville_slug}-{jours}-jours"
+        canonical = f"https://goandtrip.fr/que-faire-a-{ville_slug}"
     else:
         title = f"Que faire à {ville_display} — Activités & idées de sorties — GoAndTrip"
         meta_description = (
             f"Les meilleures activités à faire à {ville_display} : musées, restaurants, balades et bien plus. "
             f"Planifiez votre visite avec GoAndTrip, le planificateur de voyage IA."
         )
-        canonical = f"https://goandtrip.fr/quoi-faire-a-{ville_slug}"
+        canonical = f"https://goandtrip.fr/que-faire-a-{ville_slug}"
 
     return dict(
         ville=ville_display,
         ville_slug=ville_slug,
         jours=jours,
+        page_type=page_type,
         activites=activites,
         intro_text=intro_text,
         durees_liens=durees_liens,
+        autres_villes=autres_villes,
         title=title,
         meta_description=meta_description,
         canonical=canonical,
     )
 
 
-@app.route("/quoi-faire-a-<ville>-<int:jours>-jours")
-def seo_ville_jours(ville: str, jours: int):
-    """Page SEO : que faire à <ville> en <jours> jours."""
+# ── Routes SEO canoniques ─────────────────────────────────
+
+@app.route("/que-faire-a-<ville>")
+def seo_que_faire(ville: str):
+    """Page SEO principale : que faire à <ville>."""
+    return render_template("seo_ville.html", **_seo_context(ville, None, "que-faire"))
+
+
+@app.route("/itineraire-<ville>-<int:jours>-jours")
+def seo_itineraire(ville: str, jours: int):
+    """Page SEO : itinéraire <ville> <jours> jours."""
     if jours < 1 or jours > 30:
         abort(404)
-    return render_template("seo_ville.html", **_seo_context(ville, jours))
+    return render_template("seo_ville.html", **_seo_context(ville, jours, "itineraire"))
+
+
+@app.route("/visiter-<ville>-<int:jours>-jours")
+def seo_visiter(ville: str, jours: int):
+    """Page SEO : visiter <ville> en <jours> jours."""
+    if jours < 1 or jours > 30:
+        abort(404)
+    return render_template("seo_ville.html", **_seo_context(ville, jours, "visiter"))
+
+
+# ── Redirections 301 des anciens URLs → canoniques ────────
+
+@app.route("/quoi-faire-a-<ville>-<int:jours>-jours")
+def seo_ville_jours(ville: str, jours: int):
+    """Redirect 301 vers /itineraire-<ville>-<jours>-jours."""
+    if jours < 1 or jours > 30:
+        abort(404)
+    return redirect(f"/itineraire-{ville}-{jours}-jours", code=301)
 
 
 @app.route("/quoi-faire-a-<ville>")
 def seo_ville(ville: str):
-    """Page SEO : que faire à <ville>."""
-    return render_template("seo_ville.html", **_seo_context(ville, None))
+    """Redirect 301 vers /que-faire-a-<ville>."""
+    return redirect(f"/que-faire-a-{ville}", code=301)
 
 
 @app.route("/sw.js")
@@ -2010,16 +2162,25 @@ def sitemap():
     ]
 
     for slug in _VILLES_SITEMAP:
+        # Page principale "que faire à <ville>"
         urls.append({
-            "loc":        f"{BASE}/quoi-faire-a-{slug}",
+            "loc":        f"{BASE}/que-faire-a-{slug}",
             "changefreq": "weekly",
             "priority":   "0.8",
         })
-        for d in _DUREES_POPULAIRES:
+        # Pages itinéraire par durée (3, 5, 7 jours)
+        for d in [3, 5, 7]:
             urls.append({
-                "loc":        f"{BASE}/quoi-faire-a-{slug}-{d}-jours",
+                "loc":        f"{BASE}/itineraire-{slug}-{d}-jours",
                 "changefreq": "monthly",
                 "priority":   "0.7",
+            })
+        # Pages visiter par durée (2, 3 jours)
+        for d in [2, 3]:
+            urls.append({
+                "loc":        f"{BASE}/visiter-{slug}-{d}-jours",
+                "changefreq": "monthly",
+                "priority":   "0.65",
             })
 
     xml = [

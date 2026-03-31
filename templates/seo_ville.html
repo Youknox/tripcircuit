@@ -532,10 +532,18 @@
 <div class="breadcrumb-bar">
     <a href="/">Accueil</a>
     <span>/</span>
-    {% if jours %}
-        <a href="/quoi-faire-a-{{ ville_slug }}">Que faire à {{ ville }}</a>
+    {% if page_type == "itineraire" and jours %}
+        <a href="/que-faire-a-{{ ville_slug }}">{{ ville }}</a>
         <span>/</span>
-        <strong>{{ ville }} en {{ jours }} jour{{ 's' if jours > 1 }}</strong>
+        <strong>Itinéraire {{ jours }} jour{{ 's' if jours > 1 }}</strong>
+    {% elif page_type == "visiter" and jours %}
+        <a href="/que-faire-a-{{ ville_slug }}">{{ ville }}</a>
+        <span>/</span>
+        <strong>Visiter en {{ jours }} jour{{ 's' if jours > 1 }}</strong>
+    {% elif jours %}
+        <a href="/que-faire-a-{{ ville_slug }}">Que faire à {{ ville }}</a>
+        <span>/</span>
+        <strong>{{ jours }} jour{{ 's' if jours > 1 }}</strong>
     {% else %}
         <strong>Que faire à {{ ville }}</strong>
     {% endif %}
@@ -550,7 +558,11 @@
         </div>
 
         <h1>
-            {% if jours %}
+            {% if page_type == "itineraire" and jours %}
+                Itinéraire <span class="grd">{{ ville }}</span><br>{{ jours }} jour{{ 's' if jours > 1 }}
+            {% elif page_type == "visiter" and jours %}
+                Visiter <span class="grd">{{ ville }}</span><br>en {{ jours }} jour{{ 's' if jours > 1 }}
+            {% elif jours %}
                 Que faire à <span class="grd">{{ ville }}</span><br>en {{ jours }} jour{{ 's' if jours > 1 }} ?
             {% else %}
                 Que faire à <span class="grd">{{ ville }}</span> ?
@@ -558,11 +570,18 @@
         </h1>
 
         <p class="hero-sub">
-            {% if jours %}
+            {% if page_type == "itineraire" and jours %}
+                Planning jour par jour sur {{ jours }} jour{{ 's' if jours > 1 }} —
+                activités incontournables, conseils pratiques et itinéraire voyage IA.
+            {% elif page_type == "visiter" and jours %}
+                Programme complet pour visiter {{ ville }} en {{ jours }} jour{{ 's' if jours > 1 }} —
+                activités, quartiers et bons plans sélectionnés par l'IA.
+            {% elif jours %}
                 Un itinéraire optimisé sur {{ jours }} jour{{ 's' if jours > 1 }},
                 avec les meilleures activités sélectionnées pour vous.
             {% else %}
                 Découvrez les meilleures activités, musées, restaurants et incontournables de {{ ville }}.
+                Planifiez votre voyage {{ ville }} avec notre planificateur IA.
             {% endif %}
         </p>
 
@@ -718,7 +737,7 @@
     <div class="voir-aussi">
         <div class="voir-aussi-title">Voir aussi pour {{ ville }}</div>
         <div class="voir-aussi-list">
-            <a href="/quoi-faire-a-{{ ville_slug }}"
+            <a href="/que-faire-a-{{ ville_slug }}"
                class="voir-aussi-link voir-aussi-link-base {% if not jours %}actif{% endif %}">
                 Toutes les activités
             </a>
@@ -732,7 +751,37 @@
     </div>
     {% endif %}
 
-    <!-- FAQ SEO -->
+    <!-- CTA principal vers le générateur -->
+    <section style="margin-bottom: 56px; text-align: center;">
+        <a class="btn-cta" href="/organiser?ville={{ ville_slug }}" style="font-size: 17px; padding: 16px 36px;">
+            ✨ Créer mon itinéraire avec l'IA
+        </a>
+        <p style="margin-top: 12px; font-size: 13px; color: var(--mid);">
+            Gratuit · Sans carte bancaire · Résultat en 30 secondes
+        </p>
+    </section>
+
+    <!-- Maillage interne vers d'autres villes -->
+    {% if autres_villes %}
+    <section style="margin-bottom: 56px;">
+        <div class="section-header">
+            <p class="section-label">Autres destinations</p>
+            <h2 class="section-title">Explorez d'autres villes</h2>
+            <p class="section-intro">
+                Planifiez votre prochain voyage avec GoAndTrip — itinéraires et activités pour toutes les destinations.
+            </p>
+        </div>
+        <div class="voir-aussi-list">
+            {% for v in autres_villes %}
+            <a href="{{ v.url }}" class="voir-aussi-link">
+                📍 {{ v.label }}
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- FAQ SEO enrichie -->
     <section class="faq-section">
         <div class="section-header">
             <p class="section-label">Questions fréquentes</p>
@@ -742,21 +791,49 @@
         <div class="faq-item">
             <h3>Que faire à {{ ville }}{% if jours %} en {{ jours }} jour{{ 's' if jours > 1 }}{% endif %} ?</h3>
             <p>
-                {% if jours %}
+                {% if page_type == "itineraire" and jours %}
+                    L'itinéraire {{ ville }} {{ jours }} jours inclut les sites incontournables répartis jour par jour.
+                    Utilisez GoAndTrip pour générer un planning personnalisé adapté à votre rythme de voyage.
+                {% elif page_type == "visiter" and jours %}
+                    Pour visiter {{ ville }} en {{ jours }} jour{{ 's' if jours > 1 }}, concentrez-vous sur les quartiers
+                    emblématiques. GoAndTrip vous génère un programme optimisé par quartier et par centres d'intérêt.
+                {% elif jours %}
                     En {{ jours }} jour{{ 's' if jours > 1 }}, vous pouvez explorer les principaux sites touristiques de {{ ville }}.
                     Utilisez GoAndTrip pour créer un itinéraire personnalisé et ne rien manquer.
                 {% else %}
-                    {{ ville }} offre de nombreuses activités : musées, gastronomie, balades et expériences culturelles.
-                    GoAndTrip vous aide à planifier votre visite de A à Z.
+                    {{ ville }} offre de nombreuses activités : musées, gastronomie, balades et expériences culturelles uniques.
+                    GoAndTrip vous aide à planifier votre visite de A à Z avec l'aide de l'intelligence artificielle.
                 {% endif %}
             </p>
         </div>
 
         <div class="faq-item">
-            <h3>Comment planifier son voyage à {{ ville }} ?</h3>
+            <h3>Combien de jours pour visiter {{ ville }} ?</h3>
             <p>
-                Créez votre compte GoAndTrip gratuitement, ajoutez vos activités souhaitées à {{ ville }},
-                puis laissez l'IA générer un planning optimisé par quartier et par durée de visite.
+                En général, 3 à 5 jours permettent de découvrir les incontournables de {{ ville }}.
+                Pour une immersion complète, prévoyez 7 jours. GoAndTrip adapte l'itinéraire à votre durée de séjour :
+                <a href="/itineraire-{{ ville_slug }}-3-jours">3 jours</a>,
+                <a href="/itineraire-{{ ville_slug }}-5-jours">5 jours</a> ou
+                <a href="/itineraire-{{ ville_slug }}-7-jours">7 jours</a>.
+            </p>
+        </div>
+
+        <div class="faq-item">
+            <h3>Quand partir à {{ ville }} ?</h3>
+            <p>
+                La meilleure période pour visiter {{ ville }} dépend du climat et des événements locaux.
+                En général, le printemps (avril–juin) et l'automne (septembre–octobre) offrent les conditions
+                les plus agréables, avec moins de touristes et des tarifs plus attractifs.
+                GoAndTrip vous aide à organiser votre voyage à {{ ville }} quelle que soit la saison.
+            </p>
+        </div>
+
+        <div class="faq-item">
+            <h3>Comment organiser son voyage à {{ ville }} avec l'IA ?</h3>
+            <p>
+                Rendez-vous sur GoAndTrip, entrez {{ ville }} comme destination et choisissez votre durée.
+                Notre planificateur voyage IA génère un itinéraire {{ ville }} complet en quelques secondes,
+                avec des activités réelles, un planning jour par jour et des liens de réservation.
             </p>
         </div>
 
@@ -764,8 +841,9 @@
         <div class="faq-item">
             <h3>Quel budget prévoir pour {{ jours }} jour{{ 's' if jours > 1 }} à {{ ville }} ?</h3>
             <p>
-                Le budget varie selon vos envies. GoAndTrip vous permet de comparer et sélectionner
-                les activités gratuites ou payantes à {{ ville }} pour mieux préparer votre séjour.
+                Le budget varie selon vos envies et votre style de voyage. GoAndTrip vous permet de comparer
+                et sélectionner les activités gratuites ou payantes à {{ ville }} pour mieux préparer votre séjour.
+                Les liens partenaires sur cette page vous permettent de réserver activités et hôtels au meilleur prix.
             </p>
         </div>
         {% endif %}
@@ -774,12 +852,12 @@
             <h3>GoAndTrip est-il gratuit ?</h3>
             <p>
                 Oui, GoAndTrip est totalement gratuit. Créez un compte, ajoutez vos activités
-                et générez des itinéraires illimités avec l'aide de l'intelligence artificielle.
+                et générez des itinéraires voyage IA illimités sans aucune carte bancaire requise.
             </p>
         </div>
     </section>
 
-    <!-- CTA -->
+    <!-- CTA final -->
     <section>
         <div class="cta-section" style="margin-top: 56px;">
             <div class="cta-badge">✨ Gratuit — Sans carte bancaire</div>
@@ -787,10 +865,10 @@
             <p>
                 Créez votre compte GoAndTrip et générez un itinéraire personnalisé
                 {% if jours %}en {{ jours }} jour{{ 's' if jours > 1 }}{% endif %}
-                en quelques secondes.
+                en quelques secondes. Planificateur voyage IA — 100% gratuit.
             </p>
-            <a class="btn-cta" href="/register">
-                Commencer gratuitement →
+            <a class="btn-cta" href="/organiser?ville={{ ville_slug }}">
+                Créer mon itinéraire avec l'IA →
             </a>
         </div>
     </section>
@@ -808,7 +886,35 @@
     </p>
 </footer>
 
-<!-- JSON-LD FAQ structured data -->
+<!-- JSON-LD BreadcrumbList -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Accueil",
+      "item": "https://goandtrip.fr/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "{{ ville }}",
+      "item": "https://goandtrip.fr/que-faire-a-{{ ville_slug }}"
+    }{% if jours %},
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{% if page_type == 'itineraire' %}Itinéraire {{ jours }} jour{{ 's' if jours > 1 }}{% elif page_type == 'visiter' %}Visiter en {{ jours }} jour{{ 's' if jours > 1 }}{% else %}{{ jours }} jour{{ 's' if jours > 1 }}{% endif %}",
+      "item": "{{ canonical }}"
+    }{% endif %}
+  ]
+}
+</script>
+
+<!-- JSON-LD FAQPage -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -819,15 +925,31 @@
       "name": "Que faire à {{ ville }}{% if jours %} en {{ jours }} jour{{ 's' if jours > 1 }}{% endif %} ?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "{% if jours %}En {{ jours }} jour{{ 's' if jours > 1 }}, explorez les principaux sites de {{ ville }} avec un itinéraire optimisé par GoAndTrip.{% else %}{{ ville }} offre de nombreuses activités : musées, gastronomie, balades et expériences culturelles.{% endif %}"
+        "text": "{% if jours %}En {{ jours }} jour{{ 's' if jours > 1 }}, explorez les principaux sites de {{ ville }} avec un itinéraire optimisé par GoAndTrip, le planificateur voyage IA.{% else %}{{ ville }} offre de nombreuses activités : musées, gastronomie, balades et expériences culturelles. Utilisez GoAndTrip pour planifier votre itinéraire voyage IA.{% endif %}"
       }
     },
     {
       "@type": "Question",
-      "name": "Comment planifier son voyage à {{ ville }} ?",
+      "name": "Combien de jours pour visiter {{ ville }} ?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Créez un compte GoAndTrip gratuitement, ajoutez vos activités et laissez l'IA générer un planning optimisé."
+        "text": "En général, 3 à 5 jours permettent de découvrir les incontournables de {{ ville }}. Pour une immersion complète, prévoyez 7 jours. GoAndTrip adapte l'itinéraire à votre durée de séjour."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Quand partir à {{ ville }} ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Le printemps (avril–juin) et l'automne (septembre–octobre) offrent généralement les meilleures conditions pour visiter {{ ville }}, avec moins de touristes et des tarifs attractifs."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Comment organiser son voyage à {{ ville }} avec l'IA ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Rendez-vous sur GoAndTrip, entrez {{ ville }} comme destination et choisissez votre durée. Notre planificateur voyage IA génère un itinéraire complet en quelques secondes."
       }
     }
   ]
